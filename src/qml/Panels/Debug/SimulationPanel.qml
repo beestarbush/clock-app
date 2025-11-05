@@ -8,32 +8,32 @@ Item {
         padding: 20
 
         Button {
-            text: "Test Info"
+            text: Translation.debugPanelSimulationPanelTestInfoText
             onClicked: Backend.Services.notification.showInfo("Information", "This is an info notification")
         }
 
         Button {
-            text: "Test Warning"
+            text: Translation.debugPanelSimulationPanelTestWarningText
             onClicked: Backend.Services.notification.showWarning("Warning", "This is a warning notification")
         }
 
         Button {
-            text: "Test Error"
+            text: Translation.debugPanelSimulationPanelTestErrorText
             onClicked: Backend.Services.notification.showError("Error", "This is an error notification")
         }
 
         Button {
-            text: "Clear All"
+            text: Translation.debugPanelSimulationPanelClearAllButtonText
             onClicked: Backend.Services.notification.model.clearAll()
         }
 
         Button {
-            text: "Clear Inactive"
+            text: Translation.debugPanelSimulationPanelClearInactiveButtonText
             onClicked: Backend.Services.notification.model.clearInactive()
         }
 
         Button {
-            text: "Inactivate Top"
+            text: Translation.debugPanelSimulationPanelInactivateTopButtonText
             onClicked: {
                 let highest = Backend.Services.notification.model.highestPriorityNotification
                 if (highest && highest.isActive) {
@@ -43,22 +43,22 @@ Item {
         }
 
         Text {
-            text: "Total Count: " + Backend.Services.notification.model.count
+            text: Translation.debugPanelSimulationPanelTotalCountLabelText.arg(Backend.Services.notification.model.count)
             color: "white"
         }
 
         Text {
-            text: "Active Count: " + Backend.Services.notification.model.activeCount
+            text: Translation.debugPanelSimulationPanelActiveCountLabelText.arg(Backend.Services.notification.model.activeCount)
             color: "white"
         }
 
         Text {
-            text: "Has Active: " + Backend.Services.notification.model.hasNotifications
+            text: Translation.debugPanelSimulationPanelHasActiveLabelText.arg(Backend.Services.notification.model.hasNotifications)
             color: "white"
         }
 
         Text {
-            text: "Is Visible: " + Backend.Services.notification.isVisible
+            text: Translation.debugPanelSimulationPanelIsVisibleLabelText.arg(Backend.Services.notification.isVisible)
             color: "white"
         }
     }

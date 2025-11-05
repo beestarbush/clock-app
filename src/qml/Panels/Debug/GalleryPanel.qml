@@ -21,22 +21,24 @@ Item {
             width: galleryTab.width
 
             Button {
-                text: "Simple button"
+                text: Translation.debugPanelGallerySimpleButtonText
             }
 
             RoundButton {
-                text: "Round button with long text"
+                text: Translation.debugPanelGalleryRoundButtonText
             }
 
             ToggleButton {
-                target: Applications.marriedTimer.configuration
+                id: toggleButton
+
+                target: toggleButton
                 property: "enabled"
                 enabled: true
                 size: ToggleButton.Size.Large
             }
 
             Text {
-                text: "This is a simple text component."
+                text: Translation.debugPanelGalleryTextComponentText
             }
 
             ColorWheel {

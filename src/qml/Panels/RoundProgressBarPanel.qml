@@ -103,7 +103,7 @@ RoundPanel {
             anchors.horizontalCenter: centerValue.horizontalCenter
             color: roundProgressBarPanel.textColor
             font.pointSize: roundProgressBarPanel.width > 0 ? roundProgressBarPanel.width * 0.10 : Value.defaultTextSize
-            text: years > 0 ? "jaar" : "weken"
+            text: years > 0 ? Translation.roundProgressBarPanelYearsLabel : Translation.roundProgressBarPanelWeeksLabel
         }
     }
     
@@ -116,7 +116,7 @@ RoundPanel {
         
         Text {
             anchors.centerIn: parent
-            text: "Timer not set up yet"
+            text: Translation.roundProgressBarPanelNotSetup
             font.pixelSize: Value.largeTextSize
             font.bold: true
             color: Color.lightGray

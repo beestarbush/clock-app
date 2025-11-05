@@ -41,7 +41,7 @@ Rectangle {
 			}
 
 			Button {
-				text: "Close"
+				text: Translation.debugPanelCloseButton
 				onClicked: Backend.Applications.debug.panelEnabled = false
 			}
 		}
@@ -52,19 +52,19 @@ Rectangle {
 			Layout.fillWidth: true
 
 			TabButton {
-				text: qsTr("Gallery")
+				text: Translation.debugPanelTabHeaderGallery
 			}
 			TabButton {
-				text: qsTr("Utility")
+				text: Translation.debugPanelTabHeaderUtility
 			}
 			TabButton {
-				text: qsTr("Inspector")
+				text: Translation.debugPanelTabHeaderInspector
 			}
 			TabButton {
-				text: qsTr("Simulation")
+				text: Translation.debugPanelTabHeaderSimulation
 			}
 			TabButton {
-				text: qsTr("Logging")
+				text: Translation.debugPanelTabHeaderLogging
 			}
 		}
 

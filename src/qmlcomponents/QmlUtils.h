@@ -25,6 +25,10 @@ class QmlUtils : public QObject
     Q_INVOKABLE QVariant modelData(QAbstractItemModel* aModel, int aRowIndex) const;
     Q_INVOKABLE int modelCount(QAbstractItemModel* aModel) const;
 
+    // Map inspection functions
+    Q_INVOKABLE bool isMapProperty(const QVariantMap& aPropertyInfo) const;
+    Q_INVOKABLE QVariantList mapEntries(QObject* aObject, const QString& aPropertyName) const;
+
   private:
     static QmlUtils* mInstance;
 };

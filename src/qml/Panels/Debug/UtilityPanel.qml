@@ -13,13 +13,18 @@ Item {
             width: utilities.width
 
             Button {
-                text: "Shutdown"
+                text: Translation.debugPanelUtilityShutdownText
                 onClicked: Backend.Drivers.system.shutdown()
             }
 
             Button {
-                text: "Reboot"
+                text: Translation.debugPanelUtilityRebootText
                 onClicked: Backend.Drivers.system.reboot()
+            }
+
+            Button {
+                text: Translation.debugPanelUtilityReloadText
+                onClicked: Backend.Services.configuration.triggerConfigurationChanged()
             }
     }
 }

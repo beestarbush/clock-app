@@ -15,10 +15,8 @@ class TimerConfiguration : public Common::Configuration
   public:
     TimerConfiguration(QString name, QObject* parent = nullptr);
 
-    void load() override;
-
-    QJsonObject toJson() const;
-    void fromJson(const QJsonObject& json);
+    QJsonObject toJson() const override;
+    void fromJson(const QJsonObject& json) override;
 
     bool isInitialized() const;
     void setInitialized(const bool& initialized);

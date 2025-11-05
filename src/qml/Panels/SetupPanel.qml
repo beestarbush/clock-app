@@ -16,20 +16,18 @@ RoundPanel {
     // Listen to dial wheel value changes
     Connections {
         target: lowerMenuOverlay
-        
+
         function onDialWheelValueUpdated(newValue) {
             setup.updateDialWheelValue(newValue)
-            
-            // Update the active DateTimePickerPanel
-            if (setup.currentPanel === Backend.SetupEnums.MarriedDateTime) {
-                marriedDateTimePickerPanel.updateSelectedComponent(newValue)
-            } else if (setup.currentPanel === Backend.SetupEnums.KuikenDateTime) {
-                kuikenDateTimePickerPanel.updateSelectedComponent(newValue)
-            } else if (setup.currentPanel === Backend.SetupEnums.CountdownDateTime) {
-                countdownDateTimePickerPanel.updateSelectedComponent(newValue)
+
+            if (setup.currentPanel === Backend.SetupEnums.AppDateTime) {
+                appDateTimePanel.updateSelectedComponent(newValue)
             } else if (setup.currentPanel === Backend.SetupEnums.DeviceId) {
-                // Ensure the value always shows 4 digits and prepend SN-
-                deviceIdPanel.valueText = `SN-${newValue.toString().padStart(4, '0')}`;
+                deviceIdPanel.valueText = `SN-${newValue.toString().padStart(4, '0')}`
+            } else if (setup.currentPanel === Backend.SetupEnums.AppOpacity) {
+                if (setup.currentApp && setup.currentApp.configuration) {
+                    setup.currentApp.configuration.backgroundOpacity = newValue / 100.0
+                }
             }
         }
     }
@@ -37,7 +35,7 @@ RoundPanel {
     // React to backend panel changes
     Connections {
         target: setup
-        
+
         function onCurrentPanelChanged() {
             switch(setup.currentPanel) {
                 case Backend.SetupEnums.Welcome:
@@ -47,34 +45,29 @@ RoundPanel {
                     panelContainer.currentIndex = panelContainer.indexOfPanel(deviceIdPanel)
                     break
                 case Backend.SetupEnums.ServerConnection:
-                    panelContainer.currentIndex = panelContainer.indexOfPanel(serverConnectionEnablePanel)
+                    panelContainer.currentIndex = panelContainer.indexOfPanel(serverConnectionPanel)
                     break
-                case Backend.SetupEnums.MarriedTimerEnable:
-                    panelContainer.currentIndex = panelContainer.indexOfPanel(marriedTimerEnablePanel)
+                case Backend.SetupEnums.AppEnable:
+                    panelContainer.currentIndex = panelContainer.indexOfPanel(appEnablePanel)
                     break
-                case Backend.SetupEnums.MarriedDateTime:
-                    panelContainer.currentIndex = panelContainer.indexOfPanel(marriedDateTimePickerPanel)
+                case Backend.SetupEnums.AppDateTime:
+                    panelContainer.currentIndex = panelContainer.indexOfPanel(appDateTimePanel)
+                    appDateTimePanel.selectedComponent = -1
+                    appDateTimePanel.dateTime = setup.currentApp && setup.currentApp.configuration && setup.currentApp.configuration.timestamp
+                        ? new Date(setup.currentApp.configuration.timestamp * 1000)
+                        : new Date()
                     break
-                case Backend.SetupEnums.MarriedBackground:
-                    panelContainer.currentIndex = panelContainer.indexOfPanel(marriedBackgroundPickerPanel)
+                case Backend.SetupEnums.AppBackground:
+                    panelContainer.currentIndex = panelContainer.indexOfPanel(appBackgroundPanel)
                     break
-                case Backend.SetupEnums.KuikenTimerEnable:
-                    panelContainer.currentIndex = panelContainer.indexOfPanel(kuikenTimerEnablePanel)
+                case Backend.SetupEnums.AppOpacity:
+                    panelContainer.currentIndex = panelContainer.indexOfPanel(appOpacityPanel)
                     break
-                case Backend.SetupEnums.KuikenDateTime:
-                    panelContainer.currentIndex = panelContainer.indexOfPanel(kuikenDateTimePickerPanel)
+                case Backend.SetupEnums.AppBaseColor:
+                    panelContainer.currentIndex = panelContainer.indexOfPanel(appBaseColorPanel)
                     break
-                case Backend.SetupEnums.KuikenBackground:
-                    panelContainer.currentIndex = panelContainer.indexOfPanel(kuikenBackgroundPickerPanel)
-                    break
-                case Backend.SetupEnums.CountdownTimerEnable:
-                    panelContainer.currentIndex = panelContainer.indexOfPanel(countdownTimerEnablePanel)
-                    break
-                case Backend.SetupEnums.CountdownDateTime:
-                    panelContainer.currentIndex = panelContainer.indexOfPanel(countdownDateTimePickerPanel)
-                    break
-                case Backend.SetupEnums.CountdownBackground:
-                    panelContainer.currentIndex = panelContainer.indexOfPanel(countdownBackgroundPickerPanel)
+                case Backend.SetupEnums.AppAccentColor:
+                    panelContainer.currentIndex = panelContainer.indexOfPanel(appAccentColorPanel)
                     break
                 case Backend.SetupEnums.Finish:
                     panelContainer.currentIndex = panelContainer.indexOfPanel(finishPanel)
@@ -94,16 +87,13 @@ RoundPanel {
             switch(setup.currentPanel) {
                 case Backend.SetupEnums.Welcome: return indexOfPanel(welcomePanel)
                 case Backend.SetupEnums.DeviceId: return indexOfPanel(deviceIdPanel)
-                case Backend.SetupEnums.ServerConnection: return indexOfPanel(serverConnectionEnablePanel)
-                case Backend.SetupEnums.MarriedTimerEnable: return indexOfPanel(marriedTimerEnablePanel)
-                case Backend.SetupEnums.MarriedDateTime: return indexOfPanel(marriedDateTimePickerPanel)
-                case Backend.SetupEnums.MarriedBackground: return indexOfPanel(marriedBackgroundPickerPanel)
-                case Backend.SetupEnums.KuikenTimerEnable: return indexOfPanel(kuikenTimerEnablePanel)
-                case Backend.SetupEnums.KuikenDateTime: return indexOfPanel(kuikenDateTimePickerPanel)
-                case Backend.SetupEnums.KuikenBackground: return indexOfPanel(kuikenBackgroundPickerPanel)
-                case Backend.SetupEnums.CountdownTimerEnable: return indexOfPanel(countdownTimerEnablePanel)
-                case Backend.SetupEnums.CountdownDateTime: return indexOfPanel(countdownDateTimePickerPanel)
-                case Backend.SetupEnums.CountdownBackground: return indexOfPanel(countdownBackgroundPickerPanel)
+                case Backend.SetupEnums.ServerConnection: return indexOfPanel(serverConnectionPanel)
+                case Backend.SetupEnums.AppEnable: return indexOfPanel(appEnablePanel)
+                case Backend.SetupEnums.AppDateTime: return indexOfPanel(appDateTimePanel)
+                case Backend.SetupEnums.AppBackground: return indexOfPanel(appBackgroundPanel)
+                case Backend.SetupEnums.AppOpacity: return indexOfPanel(appOpacityPanel)
+                case Backend.SetupEnums.AppBaseColor: return indexOfPanel(appBaseColorPanel)
+                case Backend.SetupEnums.AppAccentColor: return indexOfPanel(appAccentColorPanel)
                 case Backend.SetupEnums.Finish: return indexOfPanel(finishPanel)
                 default: return indexOfPanel(welcomePanel)
             }
@@ -113,9 +103,9 @@ RoundPanel {
             id: welcomePanel
 
             anchors.fill: parent
-            titleText: "Welcome"
-            descriptionText: "It's about time you showed up! Let's get things ticking, just follow the steps on screen."
-            buttonText: "Next"
+            titleText: Translation.setupPanelWelcomeTitleText
+            descriptionText: Translation.setupPanelWelcomeDescriptionText
+            buttonText: Translation.setupPanelWelcomeButtonText
 
             onButtonClicked: setup.next()
         }
@@ -124,8 +114,8 @@ RoundPanel {
             id: deviceIdPanel
 
             anchors.fill: parent
-            titleText: "Register clock"
-            descriptionText: "Tap the value to edit it, then use the dial below to adjust the value."
+            titleText: Translation.setupPanelRegisterTitleText
+            descriptionText: Translation.setupPanelRegisterDescriptionText
             valueText: Backend.Services.remoteApi.deviceId
             valueTextSelected: setup && setup.dialWheel ? setup.dialWheel.visible : false
 
@@ -138,11 +128,11 @@ RoundPanel {
         }
 
         ToggleButtonPanel {
-            id: serverConnectionEnablePanel
+            id: serverConnectionPanel
 
             anchors.fill: parent
-            titleText: "Server connection"
-            descriptionText: "Use the toggle to turn a connection with server on or off. This connection can be used to synchronize status of the clock, and add/remove media from the clock."
+            titleText: Translation.setupPanelServerConnectionTitleText
+            descriptionText: Translation.setupPanelServerConnectionDescriptionText
             toggleTarget: Backend.Services.remoteApi
             toggleProperty: "enabled"
 
@@ -150,136 +140,78 @@ RoundPanel {
         }
 
         ToggleButtonPanel {
-            id: marriedTimerEnablePanel
+            id: appEnablePanel
 
             anchors.fill: parent
-            titleText: "Married timer setting"
-            descriptionText: "Use the toggle to turn the timer on or off."
-            toggleTarget: Backend.Applications.marriedTimer.configuration
+            titleText: setup.currentApp ? setup.currentApp.displayName : ""
+            descriptionText: Translation.setupPanelAppEnableDescriptionText
+            toggleTarget: setup.currentApp ? setup.currentApp.configuration : null
             toggleProperty: "enabled"
 
             onButtonClicked: setup.next()
         }
 
         DateTimePickerPanel {
-            id: marriedDateTimePickerPanel
+            id: appDateTimePanel
 
             anchors.fill: parent
-            titleText: "Configure married timer"
-            descriptionText: "Tap a part of the date or time to edit it, then use the dial below to adjust the value."
-            dateTime: new Date(Backend.Applications.marriedTimer.configuration.timestamp * 1000)
+            titleText: setup.currentApp ? Translation.setupPanelAppDateTimePickerTitleText.arg(setup.currentApp.displayName) : ""
+            descriptionText: Translation.setupPanelAppDateTimePickerDescriptionText
 
             onComponentSelected: function(component) {
                 var d = dateTime
-                setup.showDateTimeComponentPicker(component, d.getFullYear(), d.getMonth() + 1, 
+                setup.showDateTimeComponentPicker(component, d.getFullYear(), d.getMonth() + 1,
                     d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds())
             }
 
             onButtonClicked: {
                 var selectedTimestamp = Math.floor(dateTime.getTime() / 1000)
-                Backend.Applications.marriedTimer.configuration.timestamp = selectedTimestamp
-                Backend.Applications.marriedTimer.configuration.initialized = true
+                setup.currentApp.configuration.timestamp = selectedTimestamp
+                setup.currentApp.configuration.initialized = true
                 setup.next()
             }
         }
 
         TitlePanel {
-            id: marriedBackgroundPickerPanel
+            id: appBackgroundPanel
 
             anchors.fill: parent
-            titleText: "Configure married timer background"
-            descriptionText: "Select a background below."
-            buttonText: "Next"
+            titleText: setup.currentApp ? Translation.setupPanelAppBackgroundTitleText.arg(setup.currentApp.displayName) : ""
+            descriptionText: Translation.setupPanelAppBackgroundDescriptionText
+            buttonText: Translation.setupPanelAppBackgroundButtonText
 
             onButtonClicked: setup.next()
-        }
-
-        ToggleButtonPanel {
-            id: kuikenTimerEnablePanel
-
-            anchors.fill: parent
-            titleText: "Kuiken timer setting"
-            descriptionText: "Use the toggle to turn the timer on or off."
-            toggleTarget: Backend.Applications.kuikenTimer.configuration
-            toggleProperty: "enabled"
-
-            onButtonClicked: setup.next()
-        }
-
-        DateTimePickerPanel {
-            id: kuikenDateTimePickerPanel
-
-            anchors.fill: parent
-            titleText: "Configure kuiken timer"
-            descriptionText: "Tap a part of the date or time to edit it, then use the dial below to adjust the value."
-            dateTime: new Date(Backend.Applications.kuikenTimer.configuration.timestamp * 1000)
-
-            onComponentSelected: function(component) {
-                var d = dateTime
-                setup.showDateTimeComponentPicker(component, d.getFullYear(), d.getMonth() + 1, 
-                    d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds())
-            }
-
-            onButtonClicked: {
-                var selectedTimestamp = Math.floor(dateTime.getTime() / 1000)
-                Backend.Applications.kuikenTimer.configuration.timestamp = selectedTimestamp
-                Backend.Applications.kuikenTimer.configuration.initialized = true
-                setup.next()
-            }
         }
 
         TitlePanel {
-            id: kuikenBackgroundPickerPanel
+            id: appOpacityPanel
 
             anchors.fill: parent
-            titleText: "Configure kuiken timer background"
-            descriptionText: "Select a background below."
-            buttonText: "Next"
+            titleText: setup.currentApp ? Translation.setupPanelAppOpacityTitleText.arg(setup.currentApp.displayName) : ""
+            descriptionText: Translation.setupPanelAppOpacityDescriptionText
+            buttonText: Translation.setupPanelAppOpacityButtonText
 
             onButtonClicked: setup.next()
-        }
-
-        ToggleButtonPanel {
-            id: countdownTimerEnablePanel
-
-            anchors.fill: parent
-            titleText: "Countdown timer setting"
-            descriptionText: "Use the toggle to turn the timer on or off."
-            toggleTarget: Backend.Applications.countdownTimer.configuration
-            toggleProperty: "enabled"
-
-            onButtonClicked: setup.next()
-        }
-
-        DateTimePickerPanel {
-            id: countdownDateTimePickerPanel
-
-            anchors.fill: parent
-            titleText: "Configure countdown timer"
-            descriptionText: "Tap a part of the date or time to edit it, then use the dial below to adjust the value."
-            dateTime: new Date(Backend.Applications.countdownTimer.configuration.timestamp * 1000)
-
-            onComponentSelected: function(component) {
-                var d = dateTime
-                setup.showDateTimeComponentPicker(component, d.getFullYear(), d.getMonth() + 1, 
-                    d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds())
-            }
-
-            onButtonClicked: {
-                var selectedTimestamp = Math.floor(dateTime.getTime() / 1000)
-                Backend.Applications.countdownTimer.configuration.timestamp = selectedTimestamp
-                Backend.Applications.countdownTimer.configuration.initialized = true
-                setup.next()
-            }
         }
 
         TitlePanel {
-            id: countdownBackgroundPickerPanel
+            id: appBaseColorPanel
 
             anchors.fill: parent
-            titleText: "Configure countdown timer background"
-            descriptionText: "Select a background below."
-            buttonText: "Next"
+            titleText: setup.currentApp ? Translation.setupPanelAppBaseColorTitleText.arg(setup.currentApp.displayName) : ""
+            descriptionText: Translation.setupPanelAppBaseColorDescriptionText
+            buttonText: Translation.setupPanelAppBaseColorButtonText
+
+            onButtonClicked: setup.next()
+        }
+
+        TitlePanel {
+            id: appAccentColorPanel
+
+            anchors.fill: parent
+            titleText: setup.currentApp ? Translation.setupPanelAppAccentColorTitleText.arg(setup.currentApp.displayName) : ""
+            descriptionText: Translation.setupPanelAppAccentColorDescriptionText
+            buttonText: Translation.setupPanelAppAccentColorButtonText
 
             onButtonClicked: setup.next()
         }
@@ -288,9 +220,9 @@ RoundPanel {
             id: finishPanel
 
             anchors.fill: parent
-            titleText: "All set!"
-            descriptionText: "Everything's ticking like clockwork. You're good to go!"
-            buttonText: "Let's go!"
+            titleText: Translation.setupPanelFinishTitleText
+            descriptionText: Translation.setupPanelFinishDescriptionText
+            buttonText: Translation.setupPanelFinishButtonText
 
             onButtonClicked: {
                 setup.finish()

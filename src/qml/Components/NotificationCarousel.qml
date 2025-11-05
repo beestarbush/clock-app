@@ -27,7 +27,7 @@ Item {
     Text {
         id: noNotificationsText
         anchors.centerIn: parent
-        text: "No notifications"
+        text: Translation.notificationCarouselNoMedia
         color: Color.lightGray
         font.pixelSize: Value.defaultTextSize
         font.bold: true

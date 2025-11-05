@@ -35,6 +35,7 @@ set(regular_qml_components
 set(qml_singletons
 	Color.qml
 	PanelTransition.qml
+	Translation.qml
 	Utils.qml
 	Value.qml
 )

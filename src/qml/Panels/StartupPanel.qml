@@ -14,6 +14,6 @@ RoundPanel {
         anchors.centerIn: parent
         color: Color.lightGray
         font.pointSize: parent.width > 0 ? parent.width * 0.05 : Value.defaultTextSize
-        text: "Winding up the gears..."
+        text: Translation.startupPanelLabelText
     }
 }

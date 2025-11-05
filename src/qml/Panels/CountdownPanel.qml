@@ -48,7 +48,7 @@ RoundPanel {
                 id: daysLabel
                 font.pixelSize: labelTextSize
                 color: Color.lightGray
-                text: "dagen"
+                text: Translation.countdownPanelDays
             }
             Text {
                 id: hoursText
@@ -63,7 +63,7 @@ RoundPanel {
                 id: hoursLabel
                 font.pixelSize: labelTextSize
                 color: Color.lightGray
-                text: "uren"
+                text: Translation.countdownPanelHours
             }
             Text {
                 id: minutesText
@@ -78,7 +78,7 @@ RoundPanel {
                 id: minutesLabel
                 font.pixelSize: labelTextSize
                 color: Color.lightGray
-                text: "minuten"
+                text: Translation.countdownPanelMinutes
             }
             Text {
                 id: secondsText
@@ -93,7 +93,7 @@ RoundPanel {
                 id: secondsLabel
                 font.pixelSize: labelTextSize
                 color: Color.lightGray
-                text: "seconden"
+                text: Translation.countdownPanelSeconds
             }
         }
     }
@@ -106,7 +106,7 @@ RoundPanel {
         Text {
             anchors.centerIn: parent
             horizontalAlignment: Text.AlignHCenter
-            text: "Timer not set up yet"
+            text: Translation.countdownPanelNotSetup
             font.pixelSize: Value.largeTextSize
             font.bold: true
             color: Color.lightGray

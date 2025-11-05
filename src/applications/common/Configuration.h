@@ -10,6 +10,8 @@ namespace Common
 class Configuration : public QObject
 {
     Q_OBJECT
+
+    // Configuration properties
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(qreal backgroundOpacity READ backgroundOpacity WRITE setBackgroundOpacity NOTIFY backgroundOpacityChanged)
     Q_PROPERTY(QString background READ background WRITE setBackground NOTIFY backgroundChanged)
@@ -17,12 +19,10 @@ class Configuration : public QObject
     Q_PROPERTY(QColor accentColor READ accentColor WRITE setAccentColor NOTIFY accentColorChanged)
 
   public:
-    Configuration(QString name, QObject* parent = nullptr);
+    Configuration(const QString& name, QObject* parent = nullptr);
 
-    virtual void load();
-
-    QJsonObject toJson() const;
-    void fromJson(const QJsonObject& json);
+    virtual QJsonObject toJson() const;
+    virtual void fromJson(const QJsonObject& json);
 
     bool enabled() const;
     void setEnabled(const bool& enabled);

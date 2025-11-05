@@ -40,7 +40,12 @@ Bee.QmlUtils {
     function isPointerProperty(propertyInfo) {
         return propertyInfo && propertyInfo.typeName && propertyInfo.typeName.indexOf("*") !== -1
     }
-    
+
+    // Check if a property is a map type (QMap, QVariantMap, etc.)
+    function isMapPropertyType(propertyInfo) {
+        return isMapProperty(propertyInfo)
+    }
+
     // Get the object referenced by a pointer property
     function getPointerObject(parentObject, propertyName) {
         if (parentObject && propertyName) {

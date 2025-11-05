@@ -52,6 +52,10 @@ qt_add_executable(clockapp
     services/remoteapi/MediaInfo.h
     services/remoteapi/MediaList.cpp
     services/remoteapi/MediaList.h
+    services/remoteapi/DeviceConfiguration.cpp
+    services/remoteapi/DeviceConfiguration.h
+    services/configuration/Service.cpp
+    services/configuration/Service.h
     services/notification/Item.cpp
     services/notification/Item.h
     services/notification/Model.cpp
@@ -60,10 +64,13 @@ qt_add_executable(clockapp
     services/notification/Service.h
     services/Container.cpp
     services/Container.h
+    applications/common/Application.h
+    applications/common/Application.cpp
     applications/common/Configuration.h
     applications/common/Configuration.cpp
     applications/common/TimerConfiguration.h
     applications/common/TimerConfiguration.cpp
+    applications/common/Types.h
     applications/Container.cpp
     applications/Container.h
     applications/clock/Application.cpp
@@ -84,6 +91,8 @@ qt_add_executable(clockapp
     applications/menu/Model.h
     applications/setup/Application.cpp
     applications/setup/Application.h
+    applications/watchface/Application.cpp
+    applications/watchface/Application.h
 )
 
 target_include_directories(clockapp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -117,7 +126,7 @@ set_target_properties(clockapp PROPERTIES
 )
 
 target_link_libraries(clockapp
-    PRIVATE Qt6::Quick Qt6::Network MainLibplugin ComponentLibplugin PanelLibplugin
+    PRIVATE Qt6::Quick Qt6::Network MainLibplugin ComponentLibplugin PanelLibplugin ResourcesLibplugin
 )
 
 include(GNUInstallDirs)

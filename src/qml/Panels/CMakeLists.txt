@@ -15,6 +15,7 @@ qt_add_qml_module(PanelLib
         Debug/LoggingPanel.qml
         Debug/SimulationPanel.qml
         Debug/UtilityPanel.qml
+        LoadingPanel.qml
         LowerMainPanel.qml
         LowerMenuOverlay.qml
         PendulumPanel.qml
@@ -28,6 +29,7 @@ qt_add_qml_module(PanelLib
         StartupPanel.qml
         UpperMainPanel.qml
         UpperMenuOverlay.qml
+        WatchfacesPanel.qml
     DEPENDENCIES
         Components/1.0
 )

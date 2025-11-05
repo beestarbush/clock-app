@@ -2,6 +2,7 @@
 #define APPS_CLOCK_H
 
 #include "Configuration.h"
+#include "applications/common/Application.h"
 #include <QObject>
 
 namespace Services::Media
@@ -13,17 +14,18 @@ namespace Applications::Clock
 {
 class Configuration;
 
-class Application : public QObject
+class Application : public Common::Application
 {
     Q_OBJECT
-    Q_PROPERTY(Configuration* configuration MEMBER m_configuration CONSTANT)
+    Q_PROPERTY(Configuration* configuration READ configuration CONSTANT)
 
   public:
-    Application(QString name, Services::Media::Service& media, QObject* parent = nullptr);
+    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, QObject* parent = nullptr);
 
-    Configuration* configuration() const;
+    Configuration* configuration() const override;
 
     void applyConfiguration(const Configuration& configuration);
+    void applyConfiguration(const QJsonObject& configuration);
 
   private:
     Configuration* m_configuration;

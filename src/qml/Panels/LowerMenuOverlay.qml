@@ -19,6 +19,9 @@ PanelContainer {
             if (setup.mediaSelection && setup.mediaSelection.visible) {
                 return indexOfPanel(mediaSelectionDialog)
             }
+            if (setup.colorSelection && setup.colorSelection.visible) {
+                return indexOfPanel(colorSelectionDialog)
+            }
         }
         
         // Otherwise show menu dialogs
@@ -26,9 +29,6 @@ PanelContainer {
             case Backend.MenuEnums.Version: return indexOfPanel(versionDialog)
             case Backend.MenuEnums.SetupWizard: return indexOfPanel(setupWizardDialog)
             case Backend.MenuEnums.ScreenBrightness: return indexOfPanel(screenBrightnessDialog)
-            case Backend.MenuEnums.BackgroundOpacity: return indexOfPanel(backgroundOpacityDialog)
-            case Backend.MenuEnums.MediaSelection: return indexOfPanel(mediaSelectionDialog)
-            case Backend.MenuEnums.ColorSelection: return indexOfPanel(colorSelectionDialog)
             case Backend.MenuEnums.Notifications: return indexOfPanel(notificationDialog)
             case Backend.MenuEnums.DialWheel: return indexOfPanel(dialWheelDialog)
             default: return indexOfPanel(emptyDialog)
@@ -124,7 +124,7 @@ PanelContainer {
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            text: "Press and hold to enter setup wizard."
+            text: Translation.lowerMenuOverlaySetupWizardButton
             color: Color.lightGray
         }     
     }
@@ -191,66 +191,6 @@ PanelContainer {
     }
 
     MenuDialog {
-        id: backgroundOpacityDialog
-
-        anchors.fill: parent
-
-        RoundButton {
-            id: opacityButton
-
-            anchors.fill: parent
-            anchors.centerIn: parent
-
-            property real minValue: 0.0
-            property real maxValue: 1.0
-            property real step: 0.01
-            property bool incrementMode: true // true: increment, false: decrement
-
-            // The value you want to control
-            property real value: Backend.Applications.clock.configuration.backgroundOpacity
-
-            // Interpolate between Color.gray and Color.green1
-            function lerpColor(a, b, t) {
-                return Qt.rgba(
-                    a.r + (b.r - a.r) * t,
-                    a.g + (b.g - a.g) * t,
-                    a.b + (b.b - a.b) * t,
-                    a.a + (b.a - a.a) * t
-                )
-            }
-            color: lerpColor(Color.gray, Color.green1, value)
-
-            text: Math.round(value * 100) + "%"
-
-            Timer {
-                id: opacityHoldTimer
-                interval: 60
-                repeat: true
-                running: false
-                onTriggered: {
-                    if (opacityButton.incrementMode) {
-                        if (opacityButton.value < opacityButton.maxValue) {
-                            opacityButton.value = Math.min(opacityButton.value + opacityButton.step, opacityButton.maxValue)
-                        }
-                    } else {
-                        if (opacityButton.value > opacityButton.minValue) {
-                            opacityButton.value = Math.max(opacityButton.value - opacityButton.step, opacityButton.minValue)
-                        }
-                    }
-                    Backend.Applications.clock.configuration.backgroundOpacity = opacityButton.value
-                }
-            }
-
-            onPressed: opacityHoldTimer.start()
-            onReleased: {
-                opacityHoldTimer.stop()
-                // Toggle increment/decrement mode
-                incrementMode = !incrementMode
-            }
-        }
-    }
-
-    MenuDialog {
         id: mediaSelectionDialog
         anchors.fill: parent
         anchors.centerIn: parent
@@ -261,43 +201,14 @@ PanelContainer {
             anchors.centerIn: parent
             media: Backend.Services.media.model
 
-            // Function to update selected media based on current mode
             function updateSelectedMedia() {
-                // Check if we're in setup mode or menu mode
-                if (!setup.setupComplete && setup.mediaSelection.visible) {
-                    var setupTarget = setup.mediaSelection.target
-                    if (setupTarget === Backend.SetupEnums.MarriedTarget) {
-                        carousel.selectMediaByName(Backend.Applications.marriedTimer.configuration.background)
-                    } else if (setupTarget === Backend.SetupEnums.KuikenTarget) {
-                        carousel.selectMediaByName(Backend.Applications.kuikenTimer.configuration.background)
-                    } else if (setupTarget === Backend.SetupEnums.CountdownTarget) {
-                        carousel.selectMediaByName(Backend.Applications.countdownTimer.configuration.background)
-                    }
-                } else {
-                    var param = menu.dialogParam
-                    if (param === Backend.MenuEnums.ClockBackground) {
-                        carousel.selectMediaByName(Backend.Applications.clock.configuration.background)
-                    } else if (param === Backend.MenuEnums.Married) {
-                        carousel.selectMediaByName(Backend.Applications.marriedTimer.configuration.background)
-                    } else if (param === Backend.MenuEnums.Kuiken) {
-                        carousel.selectMediaByName(Backend.Applications.kuikenTimer.configuration.background)
-                    } else if (param === Backend.MenuEnums.Countdown) {
-                        carousel.selectMediaByName(Backend.Applications.countdownTimer.configuration.background)
-                    }
+                if (setup.currentApp && setup.currentApp.configuration) {
+                    carousel.selectMediaByName(setup.currentApp.configuration.background)
                 }
             }
 
             Component.onCompleted: updateSelectedMedia()
 
-            // React to dialog parameter changes
-            Connections {
-                target: menu
-                function onDialogParamChanged() {
-                    carousel.updateSelectedMedia()
-                }
-            }
-
-            // React to setup target changes
             Connections {
                 target: setup
                 function onMediaSelectionChanged() {
@@ -306,12 +217,7 @@ PanelContainer {
             }
 
             onMediaSelected: (mediaName) => {
-                // Check if we're in setup mode or menu mode
-                if (!setup.setupComplete && setup.mediaSelection.visible) {
-                    setup.selectMedia(setup.mediaSelection.target, mediaName)
-                } else {
-                    menu.setBackground(menu.dialogParam, mediaName)
-                }
+                setup.selectMedia(mediaName)
             }
         }
     }
@@ -327,22 +233,16 @@ PanelContainer {
             anchors.centerIn: parent
 
             startColor: {
-                var param = menu ? menu.dialogParam : null
-                if (!param) return "white"
-                if (param === Backend.MenuEnums.Hours) {
-                    return Backend.Applications.clock.configuration.hourColor
-                } else if (param === Backend.MenuEnums.Minutes) {
-                    return Backend.Applications.clock.configuration.minuteColor
-                } else if (param === Backend.MenuEnums.Seconds) {
-                    return Backend.Applications.clock.configuration.secondColor
-                } else if (param === Backend.MenuEnums.Pendulum) {
-                    return Backend.Applications.clock.configuration.pendulumBobColor
+                if (setup && !setup.setupComplete && setup.colorSelection && setup.colorSelection.visible) {
+                    return setup.colorSelection.startColor
                 }
                 return "white"
             }
 
             onColorSelected: (selectedColor) => {
-                menu.setColor(menu.dialogParam, selectedColor)
+                if (setup && !setup.setupComplete && setup.colorSelection && setup.colorSelection.visible) {
+                    setup.selectColor(selectedColor)
+                }
             }
         }
     }

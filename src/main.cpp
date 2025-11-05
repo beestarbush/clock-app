@@ -3,6 +3,7 @@
 #include <QQmlContext>
 
 #include "applications/Container.h"
+#include "applications/common/Types.h"
 #include "applications/menu/Application.h"
 #include "applications/setup/Application.h"
 #include "drivers/Container.h"
@@ -12,6 +13,8 @@
 
 int main(int argc, char* argv[])
 {
+    Q_INIT_RESOURCE(icons);
+
     QGuiApplication app(argc, argv);
     app.setOrganizationName("bee");
     app.setApplicationName("clockapp");
@@ -37,6 +40,15 @@ int main(int argc, char* argv[])
     qmlInterface->registerUncreatableType<Applications::Menu::Application>("MenuEnums");
     qmlInterface->registerUncreatableType<Applications::Setup::Application>("SetupEnums");
 
+    // Register Common namespace enums (Type, Watchface) for QML
+    qmlRegisterUncreatableMetaObject(
+        Common::staticMetaObject,
+        "Bee",
+        1,
+        0,
+        "Common",
+        "Access to Common enums only");
+
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,
@@ -48,5 +60,8 @@ int main(int argc, char* argv[])
 
     engine.loadFromModule("Main", "Main");
 
-    return app.exec();
+    quint32 lResult = app.exec();
+
+    Q_CLEANUP_RESOURCE(icons);
+    return lResult;
 }

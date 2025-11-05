@@ -14,6 +14,9 @@ RoundPanel {
     property alias seconds: secondsSegments.number
     property bool initialized
 
+    property alias backgroundImage: background.source
+    property alias backgroundOpacity: background.opacity
+
     property real daysToTimeAspectRatio: 0.5
     
     backgroundColor: Color.black
@@ -24,9 +27,6 @@ RoundPanel {
         id: background
 
         anchors.fill: parent
-        
-        source: Backend.Services.media.getMediaPath(Backend.Applications.marriedTimer.configuration.background)
-        opacity: Backend.Applications.marriedTimer.configuration.backgroundOpacity
     }
     
     // Container for segments - shown when initialized
@@ -199,7 +199,7 @@ RoundPanel {
         
         Text {
             anchors.centerIn: parent
-            text: "Timer not set up yet"
+            text: Translation.sevenSegmentPanelNotSetup
             font.pixelSize: Value.largeTextSize
             font.bold: true
             color: Color.lightGray

@@ -12,9 +12,22 @@ Item {
     width: parent.width
     height: parent.height
 
+    QtObject {
+        id: mapState
+
+        property QtObject currentMapInterface: null
+        property string currentMapPropertyName: ""
+    }
+
     PanelContainer {
         anchors.fill: parent
-        currentIndex: indexOfPanel(showModelButton.currentModel ? modelPanel : propertiesPanel)
+        currentIndex: {
+            if (showModelButton.currentModel)
+                return indexOfPanel(modelPanel)
+            if (mapState.currentMapInterface)
+                return indexOfPanel(mapPanel)
+            return indexOfPanel(propertiesPanel)
+        }
 
         Panel {
             id: propertiesPanel
@@ -27,7 +40,7 @@ Item {
                 anchors.top: interfaceSelectorComboBox.top
                 anchors.left: parent.left
 
-                text: "Model"
+                text: Translation.debugPanelInspectorShowModelText
 
                 visible: Utils.isQmlSupportedModel(propertiesListView.currentInterface)
 
@@ -77,7 +90,7 @@ Item {
                 anchors.top: interfaceSelectorComboBox.top
                 anchors.right: parent.right
 
-                text: "Back"
+                text: Translation.debugPanelInspectorBackText
 
                 visible: !!propertiesListView.overrideInterface
 
@@ -105,19 +118,25 @@ Item {
 
                     property var propInfo: modelData
                     property bool isPointer: Utils.isPointerProperty(propInfo)
-                    property QtObject subInterface: isPointer ? Utils.getPointerObject(propertiesListView.currentInterface, propInfo.name) : null
+                    property bool isMap: Utils.isMapPropertyType(propInfo)
+                    property QtObject subInterface: (isPointer && !isMap) ? Utils.getPointerObject(propertiesListView.currentInterface, propInfo.name) : null
 
                     MouseArea {
                         id: mouseArea
 
-                        enabled: isPointer && subInterface
+                        enabled: (isPointer && subInterface) || isMap
                         anchors.left: parent.horizontalCenter
                         anchors.right: valueLabel.right
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
 
                         onClicked: {
-                            propertiesListView.overrideInterface = subInterface
+                            if (isMap) {
+                                mapState.currentMapInterface = propertiesListView.currentInterface
+                                mapState.currentMapPropertyName = propInfo.name
+                            } else {
+                                propertiesListView.overrideInterface = subInterface
+                            }
                         }
 
                         Rectangle {
@@ -223,7 +242,7 @@ Item {
                 anchors.top: parent.top
                 anchors.right: parent.right
 
-                text: "Back"
+                text: Translation.debugPanelInspectorBackText
 
                 onClicked: showModelButton.currentModel = null
             }
@@ -341,6 +360,210 @@ Item {
                 target: modelScrollBar
                 property: "size"
                 value: modelListView.visibleArea.heightRatio
+            }
+        }
+
+        Panel {
+            id: mapPanel
+
+            property string currentMapPropertyName: mapState.currentMapPropertyName
+            property QtObject currentMapInterface: mapState.currentMapInterface
+            property var currentEntries: currentMapInterface && currentMapPropertyName
+                ? Utils.mapEntries(currentMapInterface, currentMapPropertyName)
+                : []
+
+            Button {
+                id: hideMapButton
+
+                anchors.top: parent.top
+                anchors.right: parent.right
+
+                text: Translation.debugPanelInspectorBackText
+
+                onClicked: {
+                    mapState.currentMapInterface = null
+                    mapState.currentMapPropertyName = ""
+                }
+            }
+
+            ComboBox {
+                id: mapPropertySelectorComboBox
+
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: hideMapButton.left
+                anchors.rightMargin: Value.defaultMargin
+
+                property var mapProperties: {
+                    var result = []
+                    if (!mapPanel.currentMapInterface) return result
+                    var props = Utils.properties(mapPanel.currentMapInterface)
+                    for (var i = 0; i < props.length; i++) {
+                        if (Utils.isMapPropertyType(props[i])) {
+                            result.push(props[i].name)
+                        }
+                    }
+                    return result
+                }
+
+                model: mapProperties
+
+                onCurrentIndexChanged: {
+                    if (currentIndex >= 0 && currentIndex < mapProperties.length) {
+                        mapState.currentMapPropertyName = mapProperties[currentIndex]
+                    }
+                }
+
+                delegate: ItemDelegate {
+                    width: mapPropertySelectorComboBox.width
+                    contentItem: Text {
+                        text: modelData
+                        color: "black"
+                        font: mapPropertySelectorComboBox.font
+                        elide: Text.ElideRight
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    highlighted: mapPropertySelectorComboBox.highlightedIndex === index
+                }
+            }
+
+            ListView {
+                id: mapListView
+
+                anchors.top: mapPropertySelectorComboBox.bottom
+                anchors.left: parent.left
+                anchors.right: mapScrollBar.left
+                anchors.bottom: parent.bottom
+                anchors.margins: Value.defaultMargin
+
+                model: mapPanel.currentEntries
+
+                header: Item {
+                    anchors.left: parent?.left
+                    anchors.right: parent?.right
+                    height: Value.smallButtonHeight
+
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: Value.smallMargin
+
+                        Text {
+                            Layout.preferredWidth: parent.width / 2
+                            Layout.fillHeight: true
+                            horizontalAlignment: Text.AlignHCenter
+                            text: "Key"
+                            font.bold: true
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            horizontalAlignment: Text.AlignHCenter
+                            text: "Value"
+                            font.bold: true
+                        }
+                    }
+                }
+
+                delegate: Item {
+                    id: mapDelegate
+
+                    width: ListView.view.width
+                    height: Value.smallButtonHeight
+
+                    property var entry: modelData
+
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: Value.smallMargin
+
+                        Item {
+                            Layout.preferredWidth: mapDelegate.width / 2
+                            Layout.fillHeight: true
+
+                            Text {
+                                anchors.fill: parent
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                text: mapDelegate.entry.key
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+
+                            MouseArea {
+                                id: mapValueMouseArea
+
+                                enabled: mapDelegate.entry.isPointer
+                                anchors.fill: parent
+
+                                onClicked: {
+                                    if (mapDelegate.entry.isPointer && mapDelegate.entry.value) {
+                                        mapState.currentMapInterface = null
+                                        mapState.currentMapPropertyName = ""
+                                        propertiesListView.overrideInterface = mapDelegate.entry.value
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    anchors.margins: 1
+                                    visible: mapValueMouseArea.enabled
+                                    color: mapValueMouseArea.pressed ? Color.lightGray : Color.lightGray
+                                    radius: 4
+                                    border.width: 1
+                                    border.color: Color.gray
+                                }
+                            }
+
+                            Text {
+                                anchors.fill: parent
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                text: mapDelegate.entry.displayValue
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+            }
+
+            ScrollBar {
+                id: mapScrollBar
+
+                orientation: Qt.Vertical
+                policy: ScrollBar.AsNeeded
+                anchors.right: parent.right
+                anchors.rightMargin: Value.defaultMargin
+                anchors.top: mapListView.top
+                anchors.bottom: mapListView.bottom
+
+                contentItem: Rectangle {
+                    implicitWidth: 6
+                    implicitHeight: 100
+                    radius: width / 2
+                    color: mapScrollBar.pressed ? Color.darkGray : Color.lightGray
+                }
+            }
+
+            // Bind ScrollBar to ListView
+            Binding {
+                target: mapScrollBar
+                property: "active"
+                value: mapListView.moving || mapScrollBar.pressed
+            }
+            Binding {
+                target: mapScrollBar
+                property: "position"
+                value: mapListView.visibleArea.yPosition
+            }
+            Binding {
+                target: mapScrollBar
+                property: "size"
+                value: mapListView.visibleArea.heightRatio
             }
         }
     }

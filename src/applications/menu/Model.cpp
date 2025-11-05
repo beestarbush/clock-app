@@ -21,6 +21,8 @@ QVariant Model::data(const QModelIndex& index, int role) const
     switch (role) {
     case LabelRole:
         return item->label();
+    case IconRole:
+        return item->icon();
     case ItemRole:
         return QVariant::fromValue(item);
     }
@@ -29,7 +31,7 @@ QVariant Model::data(const QModelIndex& index, int role) const
 
 QHash<int, QByteArray> Model::roleNames() const
 {
-    return {{LabelRole, "label"}, {ItemRole, "item"}};
+    return {{LabelRole, "label"}, {IconRole, "icon"}, {ItemRole, "item"}};
 }
 
 Item* Model::get(int index) const

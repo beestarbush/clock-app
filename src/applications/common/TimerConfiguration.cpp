@@ -1,7 +1,6 @@
 #include "TimerConfiguration.h"
 #include <QDebug>
 #include <QJsonObject>
-#include <QSettings>
 using namespace Common;
 
 const QString PROPERTY_INITIALIZED_KEY = QStringLiteral("initialized");
@@ -14,17 +13,6 @@ TimerConfiguration::TimerConfiguration(QString name, QObject* parent)
       m_initialized(PROPERTY_INITIALIZED_DEFAULT),
       m_timestamp(PROPERTY_TIMESTAMP_DEFAULT)
 {
-}
-
-void TimerConfiguration::load()
-{
-    Common::Configuration::load();
-
-    static QSettings settings;
-    settings.beginGroup(m_name);
-    m_initialized = settings.value(PROPERTY_INITIALIZED_KEY, PROPERTY_INITIALIZED_DEFAULT).toBool();
-    m_timestamp = settings.value(PROPERTY_TIMESTAMP_KEY, PROPERTY_TIMESTAMP_DEFAULT).toULongLong();
-    settings.endGroup();
 }
 
 QJsonObject TimerConfiguration::toJson() const
@@ -59,11 +47,6 @@ void TimerConfiguration::setInitialized(const bool& initialized)
         return;
     }
 
-    static QSettings settings;
-    settings.beginGroup(m_name);
-    settings.setValue(PROPERTY_INITIALIZED_KEY, initialized);
-    settings.endGroup();
-
     m_initialized = initialized;
     emit initializedChanged();
 }
@@ -78,11 +61,6 @@ void TimerConfiguration::setTimestamp(const quint64& timestamp)
     if (m_timestamp == timestamp) {
         return;
     }
-
-    static QSettings settings;
-    settings.beginGroup(m_name);
-    settings.setValue(PROPERTY_TIMESTAMP_KEY, timestamp);
-    settings.endGroup();
 
     m_timestamp = timestamp;
     emit timestampChanged();
@@ -104,9 +82,10 @@ QDebug operator<<(QDebug debug, const TimerConfiguration& config)
 {
     QDebugStateSaver saver(debug);
     debug.nospace() << static_cast<const Common::Configuration&>(config);
+    debug.nospace() << "\n";
     debug.nospace() << "Common::TimerConfiguration: (\n"
                     << " - initialized=" << config.isInitialized() << "\n"
-                    << " - timestamp=" << config.timestamp() << ")\n";
+                    << " - timestamp=" << config.timestamp() << ")";
     return debug;
 }
 } // namespace Common

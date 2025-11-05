@@ -32,11 +32,12 @@ Item {
             id: repeater
             model: menuModel
             delegate: Item {
-                width: 60
-                height: 20
+                width: 40
+                height: 40
 
                 property int index: model.index
                 property string label: model.label
+                property string icon: model.icon || ""
 
                 property real angle: index * itemAngle - 90
                 property real radius: ring.width / 2 - ring.border.width / 2
@@ -45,12 +46,34 @@ Item {
                 x: ring.width / 2 + Math.cos(absoluteAngle * Math.PI / 180) * radius - width / 2
                 y: ring.height / 2 + Math.sin(absoluteAngle * Math.PI / 180) * radius - height / 2
 
+                Image {
+                    id: iconImage
+                    anchors.centerIn: parent
+                    width: 36
+                    height: 36
+                    source: icon
+                    visible: icon !== ""
+                    sourceSize: Qt.size(36, 36)
+                    opacity: index === selectedIndex ? 1.0 : 0.6
+
+                    transform: Rotation {
+                        origin.x: iconImage.width / 2
+                        origin.y: iconImage.height / 2
+                        angle: absoluteAngle + 90
+                    }
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 300 }
+                    }
+                }
+
                 Text {
                     anchors.centerIn: parent
                     text: label
                     font.pixelSize: 12
                     font.bold: index === selectedIndex
                     color: index === selectedIndex ? Color.green1 : Color.white
+                    visible: icon === ""
 
                     transform: Rotation {
                         origin.x: width / 2

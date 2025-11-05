@@ -72,7 +72,7 @@ Item {
     Text {
         id: noMediaText
         anchors.centerIn: parent
-        text: "No media found\nPlace files in media directory"
+        text: Translation.mediaCarouselNoMedia
         color: Color.lightGray
         font.pixelSize: Value.defaultTextSize
         horizontalAlignment: Text.AlignHCenter

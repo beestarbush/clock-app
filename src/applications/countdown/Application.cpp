@@ -2,7 +2,6 @@
 #include "services/media/Service.h"
 #include <QDateTime>
 #include <QDebug>
-#include <QSettings>
 using namespace Applications::Countdown;
 
 constexpr quint64 SECONDS_IN_MINUTE = 60;
@@ -11,9 +10,9 @@ constexpr quint64 SECONDS_IN_A_DAY = SECONDS_IN_HOUR * 24;
 constexpr quint64 DAYS_IN_A_WEEK = 7;
 constexpr quint64 DAYS_IN_YEAR = 365;
 
-Application::Application(QString name, Services::Media::Service& media, QObject* parent)
-    : QObject(parent),
-      m_configuration(new Common::TimerConfiguration(name, parent)),
+Application::Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, QObject* parent)
+    : Common::Application(id, type, displayName, order, watchface, parent),
+      m_configuration(new Common::TimerConfiguration(id, parent)),
       m_media(media),
       m_years(0),
       m_days(0),
@@ -25,10 +24,6 @@ Application::Application(QString name, Services::Media::Service& media, QObject*
       m_timer(this),
       m_finished(false)
 {
-    m_configuration->load();
-    qInfo() << "Countdown configuration: \n"
-            << *m_configuration;
-
     startTimer();
 
     // Refresh background when media sync completes
@@ -47,11 +42,14 @@ Common::TimerConfiguration* Application::configuration() const
 
 void Application::applyConfiguration(const Common::TimerConfiguration& configuration)
 {
-    qDebug() << "Applying configuration to Countdown";
-
     *m_configuration = configuration;
+    qDebug() << "Countdown configuration: " << *m_configuration;
+}
 
-    qDebug() << "Countdown configuration applied successfully";
+void Application::applyConfiguration(const QJsonObject& configuration)
+{
+    m_configuration->fromJson(configuration);
+    qDebug() << "Countdown configuration: " << *m_configuration;
 }
 
 void Application::startTimer()

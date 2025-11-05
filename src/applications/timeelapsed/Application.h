@@ -1,6 +1,7 @@
 #ifndef APPS_TIME_ELAPSED_APPLICATION_H
 #define APPS_TIME_ELAPSED_APPLICATION_H
 
+#include "applications/common/Application.h"
 #include "applications/common/TimerConfiguration.h"
 #include <QObject>
 #include <QTimer>
@@ -12,10 +13,10 @@ class Service;
 
 namespace Applications::TimeElapsed
 {
-class Application : public QObject
+class Application : public Common::Application
 {
     Q_OBJECT
-    Q_PROPERTY(Common::TimerConfiguration* configuration MEMBER m_configuration CONSTANT)
+    Q_PROPERTY(Common::TimerConfiguration* configuration READ configuration CONSTANT)
     Q_PROPERTY(quint64 years READ years NOTIFY timeChanged)
     Q_PROPERTY(quint64 days READ days NOTIFY timeChanged)
     Q_PROPERTY(quint64 daysInWeek READ daysInWeek NOTIFY timeChanged)
@@ -25,11 +26,12 @@ class Application : public QObject
     Q_PROPERTY(quint64 seconds READ seconds NOTIFY timeChanged)
 
   public:
-    Application(QString name, Services::Media::Service& media, QObject* parent = nullptr);
+    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, QObject* parent = nullptr);
 
-    Common::TimerConfiguration* configuration() const;
+    Common::TimerConfiguration* configuration() const override;
 
     void applyConfiguration(const Common::TimerConfiguration& configuration);
+    void applyConfiguration(const QJsonObject& configuration) override;
 
     quint64 years() const;
     quint64 days() const;

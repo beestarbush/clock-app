@@ -3,6 +3,7 @@
 
 #include <QObject>
 
+#include "configuration/Service.h"
 #include "datetime/Service.h"
 #include "media/Service.h"
 #include "notification/Service.h"
@@ -33,7 +34,7 @@ class Container : public QObject
     Q_PROPERTY(Services::Version::Service* version MEMBER m_version CONSTANT)
     Q_PROPERTY(Services::RemoteApi::Service* remoteApi MEMBER m_remoteApi CONSTANT)
     Q_PROPERTY(Services::SystemMonitor::Service* systemMonitor MEMBER m_systemMonitor CONSTANT)
-
+    Q_PROPERTY(Services::Configuration::Service* configuration MEMBER m_configuration CONSTANT)
   public:
     friend class ::Applications::Container;
 
@@ -47,6 +48,7 @@ class Container : public QObject
     Notification::Service* m_notification;
     Media::Service* m_media;
     SystemMonitor::Service* m_systemMonitor;
+    Configuration::Service* m_configuration;
     DateTime::Service* m_dateTime;
     QmlInterface::Service* m_qmlInterface;
 };

@@ -17,6 +17,7 @@ class Model : public QAbstractListModel
     enum Roles
     {
         LabelRole = Qt::UserRole + 1,
+        IconRole,
         ItemRole
     };
 

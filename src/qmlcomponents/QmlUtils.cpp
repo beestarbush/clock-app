@@ -153,3 +153,53 @@ int QmlUtils::modelCount(QAbstractItemModel* aModel) const
 {
     return aModel ? aModel->rowCount() : 0;
 }
+
+bool QmlUtils::isMapProperty(const QVariantMap& aPropertyInfo) const
+{
+    auto lTypeName = aPropertyInfo.value(QStringLiteral("typeName")).toString();
+    auto lVariantTypeName = aPropertyInfo.value(QStringLiteral("variantTypeName")).toString();
+    return lTypeName.contains(QLatin1String("Map"), Qt::CaseInsensitive) || lVariantTypeName.contains(QLatin1String("Map"), Qt::CaseInsensitive);
+}
+
+QVariantList QmlUtils::mapEntries(QObject* aObject, const QString& aPropertyName) const
+{
+    QVariantList lEntries;
+
+    if (!aObject) {
+        return lEntries;
+    }
+
+    QVariant lValue = aObject->property(qPrintable(aPropertyName));
+
+    if (!lValue.canConvert<QVariantMap>()) {
+        return lEntries;
+    }
+
+    QVariantMap lMap = lValue.toMap();
+
+    for (auto lIterator = lMap.constBegin(); lIterator != lMap.constEnd(); ++lIterator) {
+        QVariantMap lEntry;
+        lEntry.insert(QStringLiteral("key"), lIterator.key());
+
+        auto lEntryValue = lIterator.value();
+        auto* lObjPtr = lEntryValue.value<QObject*>();
+
+        if (lObjPtr) {
+            lEntry.insert(QStringLiteral("value"), QVariant::fromValue(lObjPtr));
+            lEntry.insert(QStringLiteral("displayValue"),
+                          QString::fromLatin1("%1 (0x%2)")
+                              .arg(QString::fromLatin1(lObjPtr->metaObject()->className()),
+                                   QString::number(reinterpret_cast<quintptr>(lObjPtr), 16)));
+            lEntry.insert(QStringLiteral("isPointer"), true);
+        }
+        else {
+            lEntry.insert(QStringLiteral("value"), lEntryValue);
+            lEntry.insert(QStringLiteral("displayValue"), lEntryValue.toString());
+            lEntry.insert(QStringLiteral("isPointer"), false);
+        }
+
+        lEntries.append(lEntry);
+    }
+
+    return lEntries;
+}

@@ -6,6 +6,13 @@ import Bee as Backend
 RoundPanel {
 	id: clockPanel
 
+    property alias backgroundImage: clockBackground.source
+    property alias backgroundOpacity: clockBackground.opacity
+
+    property alias hourColor: clock.hourColor
+    property alias minuteColor: clock.minuteColor
+    property alias secondColor: clock.secondColor
+
     backgroundColor: Color.black
 
     signal clicked()
@@ -14,17 +21,10 @@ RoundPanel {
         id: clockBackground
 
         anchors.fill: parent
-        
-        source: Backend.Services.media.getMediaPath(Backend.Applications.clock.configuration.background)
-        opacity: Backend.Applications.clock.configuration.backgroundOpacity
     }
 
     Clock {
         id: clock
-
-        hourColor: Backend.Applications.clock.configuration.hourColor
-        minuteColor: Backend.Applications.clock.configuration.minuteColor
-        secondColor: Backend.Applications.clock.configuration.secondColor
 
         anchors.fill: parent
         anchors.horizontalCenter: parent.horizontalCenter
