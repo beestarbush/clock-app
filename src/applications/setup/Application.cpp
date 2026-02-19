@@ -17,6 +17,8 @@ const QString PROPERTY_PENDULUM_BOB_COLOR_KEY = QStringLiteral("pendulum-bob-col
 const QColor PROPERTY_PENDULUM_BOB_COLOR_DEFAULT = QColor("#009950");
 const QString PROPERTY_PENDULUM_ROD_COLOR_KEY = QStringLiteral("pendulum-rod-color");
 const QColor PROPERTY_PENDULUM_ROD_COLOR_DEFAULT = QColor("#333333");
+const QString PROPERTY_PENDULUM_BACKGROUND_COLOR_KEY = QStringLiteral("pendulum-background-color");
+const QColor PROPERTY_PENDULUM_BACKGROUND_COLOR_DEFAULT = QColor("#bbbbbb");
 const QString PROPERTY_BASE_COLOR_KEY = QStringLiteral("base-color");
 const QColor PROPERTY_BASE_COLOR_DEFAULT = QColor("#000000");
 const QString PROPERTY_ACCENT_COLOR_KEY = QStringLiteral("accent-color");
@@ -38,6 +40,7 @@ Application::Application(Common::DynamicApplicationMap& applications,
       m_configurationService(configurationService),
       m_pendulumBobColor(PROPERTY_PENDULUM_BOB_COLOR_DEFAULT),
       m_pendulumRodColor(PROPERTY_PENDULUM_ROD_COLOR_DEFAULT),
+      m_pendulumBackgroundColor(PROPERTY_PENDULUM_BACKGROUND_COLOR_DEFAULT),
       m_baseColor(PROPERTY_BASE_COLOR_DEFAULT),
       m_accentColor(PROPERTY_ACCENT_COLOR_DEFAULT)
 {
@@ -417,6 +420,21 @@ void Application::setPendulumRodColor(const QColor& color)
     emit pendulumRodColorChanged();
 }
 
+QColor Application::pendulumBackgroundColor() const
+{
+    return m_pendulumBackgroundColor;
+}
+
+void Application::setPendulumBackgroundColor(const QColor& color)
+{
+    if (m_pendulumBackgroundColor == color) {
+        return;
+    }
+
+    m_pendulumBackgroundColor = color;
+    emit pendulumBackgroundColorChanged();
+}
+
 QColor Application::baseColor() const
 {
     return m_baseColor;
@@ -455,6 +473,9 @@ void Application::applySystemConfiguration(const QJsonObject& systemConfig)
     if (systemConfig.contains(PROPERTY_PENDULUM_ROD_COLOR_KEY)) {
         setPendulumRodColor(QColor(systemConfig[PROPERTY_PENDULUM_ROD_COLOR_KEY].toString()));
     }
+    if (systemConfig.contains(PROPERTY_PENDULUM_BACKGROUND_COLOR_KEY)) {
+        setPendulumBackgroundColor(QColor(systemConfig[PROPERTY_PENDULUM_BACKGROUND_COLOR_KEY].toString()));
+    }
     if (systemConfig.contains(PROPERTY_BASE_COLOR_KEY)) {
         setBaseColor(QColor(systemConfig[PROPERTY_BASE_COLOR_KEY].toString()));
     }
@@ -468,6 +489,7 @@ QJsonObject Application::buildSystemConfiguration() const
     QJsonObject systemConfig;
     systemConfig[PROPERTY_PENDULUM_BOB_COLOR_KEY] = m_pendulumBobColor.name();
     systemConfig[PROPERTY_PENDULUM_ROD_COLOR_KEY] = m_pendulumRodColor.name();
+    systemConfig[PROPERTY_PENDULUM_BACKGROUND_COLOR_KEY] = m_pendulumBackgroundColor.name();
     systemConfig[PROPERTY_BASE_COLOR_KEY] = m_baseColor.name();
     systemConfig[PROPERTY_ACCENT_COLOR_KEY] = m_accentColor.name();
     return systemConfig;

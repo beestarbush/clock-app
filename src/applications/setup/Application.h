@@ -76,6 +76,7 @@ class Application : public QObject
     Q_PROPERTY(ColorSelectionParams colorSelection READ colorSelection NOTIFY colorSelectionChanged)
     Q_PROPERTY(QColor pendulumBobColor READ pendulumBobColor WRITE setPendulumBobColor NOTIFY pendulumBobColorChanged)
     Q_PROPERTY(QColor pendulumRodColor READ pendulumRodColor WRITE setPendulumRodColor NOTIFY pendulumRodColorChanged)
+    Q_PROPERTY(QColor pendulumBackgroundColor READ pendulumBackgroundColor WRITE setPendulumBackgroundColor NOTIFY pendulumBackgroundColorChanged)
     Q_PROPERTY(QColor baseColor READ baseColor WRITE setBaseColor NOTIFY baseColorChanged)
     Q_PROPERTY(QColor accentColor READ accentColor WRITE setAccentColor NOTIFY accentColorChanged)
 
@@ -116,6 +117,9 @@ class Application : public QObject
     QColor pendulumRodColor() const;
     void setPendulumRodColor(const QColor& color);
 
+    QColor pendulumBackgroundColor() const;
+    void setPendulumBackgroundColor(const QColor& color);
+
     QColor baseColor() const;
     void setBaseColor(const QColor& color);
 
@@ -148,6 +152,7 @@ class Application : public QObject
     void colorSelectionChanged();
     void pendulumBobColorChanged();
     void pendulumRodColorChanged();
+    void pendulumBackgroundColorChanged();
     void baseColorChanged();
     void accentColorChanged();
 
@@ -179,6 +184,7 @@ class Application : public QObject
     // System configuration
     QColor m_pendulumBobColor;
     QColor m_pendulumRodColor;
+    QColor m_pendulumBackgroundColor;
     QColor m_baseColor;
     QColor m_accentColor;
 };

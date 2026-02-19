@@ -20,6 +20,7 @@ RoundPanel {
     property real daysToTimeAspectRatio: 0.5
     
     backgroundColor: Color.black
+    property color segmentColor: Color.white
 
     signal clicked()
 
@@ -40,7 +41,6 @@ RoundPanel {
             id: daysSegments
             property int number: 0
             property int digitCount: 5
-            property color segmentColor: "white"
             property int spacing: 10
 
             anchors.centerIn: parent
@@ -60,7 +60,7 @@ RoundPanel {
                         width: daysSegments.digitWidth
                         height: daysSegments.digitHeight
                         digit: parseInt(daysSegments.numberString.charAt(index))
-                        color: daysSegments.segmentColor
+                        color: sevenSegmentPanel.segmentColor
                     }
                 }
             }
@@ -77,7 +77,6 @@ RoundPanel {
             id: hoursSegments
             property int number: 0
             property int digitCount: 2
-            property color segmentColor: "white"
             property int spacing: 10
 
             anchors.top: daysSegments.bottom
@@ -99,7 +98,7 @@ RoundPanel {
                         width: hoursSegments.digitWidth
                         height: hoursSegments.digitHeight
                         digit: parseInt(hoursSegments.numberString.charAt(index))
-                        color: hoursSegments.segmentColor
+                        color: sevenSegmentPanel.segmentColor
                     }
                 }
             }
@@ -116,7 +115,6 @@ RoundPanel {
             id: minutesSegments
             property int number: 0
             property int digitCount: 2
-            property color segmentColor: "white"
             property int spacing: 10
 
             anchors.top: daysSegments.bottom
@@ -137,7 +135,7 @@ RoundPanel {
                         width: minutesSegments.digitWidth
                         height: minutesSegments.digitHeight
                         digit: parseInt(minutesSegments.numberString.charAt(index))
-                        color: minutesSegments.segmentColor
+                        color: sevenSegmentPanel.segmentColor
                     }
                 }
             }
@@ -154,7 +152,6 @@ RoundPanel {
             id: secondsSegments
             property int number: 0
             property int digitCount: 2
-            property color segmentColor: "white"
             property int spacing: 10
 
             anchors.top: daysSegments.bottom
@@ -176,7 +173,7 @@ RoundPanel {
                         width: secondsSegments.digitWidth
                         height: secondsSegments.digitHeight
                         digit: parseInt(secondsSegments.numberString.charAt(index))
-                        color: secondsSegments.segmentColor
+                        color: sevenSegmentPanel.segmentColor
                     }
                 }
             }
@@ -202,7 +199,7 @@ RoundPanel {
             text: Translation.sevenSegmentPanelNotSetup
             font.pixelSize: Value.largeTextSize
             font.bold: true
-            color: Color.lightGray
+            color: sevenSegmentPanel.segmentColor
         }
     }
 

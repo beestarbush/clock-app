@@ -64,6 +64,7 @@ Panel {
 
             backgroundImage: (currentAppValid && Backend.Services.media.getMediaPath(currentApp.configuration.background)) || ""
             backgroundOpacity: (currentAppValid && currentApp.configuration.backgroundOpacity) || 0
+            backgroundColor: (currentAppValid && currentApp.configuration.baseColor) || "black"
             hourColor: (currentAppValid && currentApp.configuration.hourColor) || "white"
             minuteColor: (currentAppValid && currentApp.configuration.minuteColor) || "white"
             secondColor: (currentAppValid && currentApp.configuration.secondColor) || "white"
@@ -73,7 +74,7 @@ Panel {
         SevenSegmentPanel {
             id: sevenSegmentPanel
 
-            initialized: (currentAppValid && currentApp.configuration.initialized) || false
+            initialized: (currentAppValid && currentApp.watchface === Backend.Common.Watchface.SevenSegment) ? (currentApp.configuration.initialized || false) : true
             years: (currentApp && currentApp.years) || 0
             days: (currentApp && currentApp.days) || 0
             hours: (currentApp && currentApp.hours) || 0
@@ -83,11 +84,15 @@ Panel {
 
             backgroundImage: (currentAppValid && Backend.Services.media.getMediaPath(currentApp.configuration.background)) || ""
             backgroundOpacity: (currentAppValid && currentApp.configuration.backgroundOpacity) || 0
+            backgroundColor: (currentAppValid && currentApp.configuration.baseColor) || "black"
+            segmentColor: (currentAppValid && currentApp.configuration.accentColor) || "white"
         }
 
         // Round Progress Bar Panel
         RoundProgressBarPanel {
-            initialized: (currentAppValid && currentApp.configuration.initialized) || false
+            id: roundProgressBarPanel
+
+            initialized: (currentAppValid && currentApp.watchface === Backend.Common.Watchface.RoundProgressBar) ? (currentApp.configuration.initialized || false) : true
             years: (currentApp && currentApp.years) || 0
             days: (currentApp && currentApp.days) || 0
             daysInWeek: (currentApp && currentApp.daysInWeek) || 0
@@ -95,7 +100,7 @@ Panel {
             hours: (currentApp && currentApp.hours) || 0
             minutes: (currentApp && currentApp.minutes) || 0
             seconds: (currentApp && currentApp.seconds) || 0
-            barColor: (currentAppValid && currentApp.configuration.baseColor) || "white"
+            barColor: (currentAppValid && currentApp.configuration.baseColor) || "black"
             textColor: (currentAppValid && currentApp.configuration.accentColor) || "white"
             backgroundSource: (currentAppValid && Backend.Services.media.getMediaPath(currentApp.configuration.background)) || ""
             backgroundOpacity: (currentAppValid && currentApp.configuration.backgroundOpacity) || 0
@@ -104,9 +109,13 @@ Panel {
 
         // Countdown Panel
         CountdownPanel {
+            id: countdownPanel
+
+            backgroundColor: (currentAppValid && currentApp.configuration.baseColor) || "black"
+            textColor: (currentAppValid && currentApp.configuration.accentColor) || "white"
             backgroundSource: (currentAppValid && Backend.Services.media.getMediaPath(currentApp.configuration.background)) || ""
             backgroundOpacity: (currentAppValid && currentApp.configuration.backgroundOpacity) || 0
-            initialized: (currentAppValid && currentApp.configuration.initialized) || false
+            initialized: (currentAppValid && currentApp.watchface === Backend.Common.Watchface.CountdownTimer) ? (currentApp.configuration.initialized || false) : true
             days: (currentApp && currentApp.days) || 0
             hours: (currentApp && currentApp.hours) || 0
             minutes: (currentApp && currentApp.minutes) || 0

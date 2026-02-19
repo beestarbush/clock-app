@@ -5,15 +5,16 @@
         "volume": 0.5,
         "pendulum-bob-color": "#009950",
         "pendulum-rod-color": "#333333",
-        "base-color": "#02996c",
-        "accent-color": "#bbbbbb"
+        "pendulum-background-color": "#000000",
+        "base-color": "#000000",
+        "accent-color": "#009950"
     },
     "applications": [
         {
             "accent-color": "#bbbbbb",
             "background": "giphy_3.gif",
             "background-opacity": 0.5,
-            "base-color": "#02996c",
+            "base-color": "#000000",
             "enabled": true,
             "hour-color": "#995000",
             "id": "clock",
@@ -28,8 +29,8 @@
             "accent-color": "#bbbbbb",
             "background": "married_vhs.gif",
             "background-opacity": 0.5,
-            "base-color": "#02996c",
-            "enabled": false,
+            "base-color": "#000000",
+            "enabled": true,
             "id": "married-timer",
             "initialized": true,
             "name": "Trouw Timer",
@@ -42,7 +43,7 @@
             "accent-color": "#bbbbbb",
             "background": "StoriesofLightphotography-RandyenNaomi-23.jpg",
             "background-opacity": 0.5,
-            "base-color": "#02996c",
+            "base-color": "#693D30",
             "enabled": true,
             "id": "kuiken-timer",
             "initialized": true,
@@ -50,13 +51,13 @@
             "order": 2,
             "timestamp": 1763337600,
             "type": "time-elapsed",
-            "watchface": "seven-segment"
+            "watchface": "round-progress-bar"
         },
         {
             "accent-color": "#bbbbbb",
             "background": "dertig.gif",
             "background-opacity": 0.5,
-            "base-color": "#02996c",
+            "base-color": "#000000",
             "enabled": true,
             "id": "countdown-timer",
             "initialized": true,

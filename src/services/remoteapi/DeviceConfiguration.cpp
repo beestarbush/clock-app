@@ -48,25 +48,32 @@ QJsonObject DeviceConfiguration::toJson() const
 
 DeviceConfiguration DeviceConfiguration::fromJson(const QJsonObject& json)
 {
+    // Unwrap response envelope if present (e.g. {"status":"success","configuration":{...}})
+    QJsonObject configJson = json;
+    if (json.contains("configuration") && json["configuration"].isObject()) {
+        qDebug() << "Unwrapping configuration from response envelope";
+        configJson = json["configuration"].toObject();
+    }
+
     DeviceConfiguration config;
 
-    config.version = json["version"].toString("1.0");
-    config.deviceId = json["device_id"].toString();
-    config.activeAppId = json["active_app_id"].toString();
+    config.version = configJson["version"].toString("1.0");
+    config.deviceId = configJson["device_id"].toString();
+    config.activeAppId = configJson["active_app_id"].toString();
 
-    QString lastModifiedStr = json["last_modified"].toString();
+    QString lastModifiedStr = configJson["last_modified"].toString();
     if (!lastModifiedStr.isEmpty()) {
         config.lastModified = QDateTime::fromString(lastModifiedStr, Qt::ISODate);
     }
 
     // Deserialize system-wide configuration
-    if (json.contains("system-configuration")) {
-        config.systemConfiguration = json["system-configuration"].toObject();
+    if (configJson.contains("system-configuration")) {
+        config.systemConfiguration = configJson["system-configuration"].toObject();
     }
 
     // Deserialize applications array - store JSON objects directly
     // Each contains metadata (id, type, name, order, watchface) + configuration properties
-    QJsonArray appsArray = json["applications"].toArray();
+    QJsonArray appsArray = configJson["applications"].toArray();
     for (const QJsonValue& value : appsArray) {
         if (value.isObject()) {
             config.applications.append(value.toObject());

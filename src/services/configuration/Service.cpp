@@ -153,9 +153,6 @@ void Service::performStartupCheck()
 
     setStartupCheckInProgress(true);
 
-    // Always load local configuration as baseline
-    loadLocalConfiguration();
-
     if (!m_remoteApi.enabled()) {
         qInfo() << "Remote API disabled, using local configuration";
         completeStartupCheck();
@@ -174,7 +171,7 @@ void Service::performStartupCheck()
                                          &Services::RemoteApi::Service::connectedChanged,
                                          this,
                                          [this]() {
-                                             if (m_remoteApi.connected() && m_startupCheckInProgress) {
+                                             if (m_remoteApi.connected() && startupCheckInProgress()) {
                                                  disconnect(m_startupConnectionWatcher);
                                                  fetchConfiguration();
                                              }
@@ -186,6 +183,10 @@ void Service::completeStartupCheck()
     m_startupTimeoutTimer.stop();
     disconnect(m_startupConnectionWatcher);
     setStartupCheckInProgress(false);
+
+    if (!m_currentConfig || !m_currentConfig->isValid()) {
+        loadLocalConfiguration();
+    }
 
     // Notify that configuration is available (even if unchanged, apps need to load)
     emit configurationChanged();
