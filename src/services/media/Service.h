@@ -3,16 +3,19 @@
 
 #include "Model.h"
 #include <QDateTime>
-#include <QFileSystemWatcher>
+#include <QMetaObject>
 #include <QObject>
 #include <QStringList>
 #include <QTimer>
 
-namespace Services::RemoteApi
+namespace Services::WebSocket
 {
 class Service;
 }
-class MediaInfo;
+namespace Services::Rest
+{
+class Service;
+}
 
 namespace Services::Media
 {
@@ -21,55 +24,51 @@ class Service : public QObject
     Q_OBJECT
     Q_PROPERTY(Media::Model* model READ model CONSTANT)
     Q_PROPERTY(bool syncing READ syncing NOTIFY syncingChanged)
-    Q_PROPERTY(QDateTime lastSyncTime READ lastSyncTime NOTIFY lastSyncTimeChanged)
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
+    Q_PROPERTY(bool startupCheckInProgress READ startupCheckInProgress NOTIFY startupCheckInProgressChanged)
 
   public:
-    explicit Service(Services::RemoteApi::Service& remoteApi, QObject* parent = nullptr);
+    explicit Service(Services::WebSocket::Service& webSocket, Services::Rest::Service& rest, QObject* parent = nullptr);
 
     Model* model();
     bool syncing() const;
-    QDateTime lastSyncTime() const;
     QString lastError() const;
+    bool startupCheckInProgress() const;
 
     Q_INVOKABLE QString getMediaPath(const QString& name) const;
-    Q_INVOKABLE void triggerSync();
 
   signals:
     void syncingChanged();
-    void lastSyncTimeChanged();
     void lastErrorChanged();
     void syncCompleted();
-
-  private slots:
-    void onDirectoryChanged(const QString& path);
-    void onSyncTimerTimeout();
+    void startupCheckInProgressChanged();
 
   private:
-    void setupFileWatcher();
-    void scanDirectory();
     bool isValidFile(const QString& filePath) const;
     QString getMediaDirectory() const;
 
-    void fetchMediaList();
+    void syncWithServerFiles(const QStringList& serverFilenames);
     void downloadMedia(const QString& mediaId);
-    void cleanupOldMedia(const QStringList& serverMediaList);
     void completeSyncWithSuccess();
     void completeSyncWithError(const QString& error);
 
+    void setSyncing(bool syncing);
+    void performStartupCheck();
+    void completeStartupCheck();
+    void setStartupCheckInProgress(bool inProgress);
+
+    void onMediaReceived(const QJsonObject& data);
+
     Model m_model;
-    QFileSystemWatcher m_fileWatcher;
-    QTimer m_scanTimer;
-    QTimer m_syncTimer;
-    Services::RemoteApi::Service& m_remoteApi;
+    QTimer m_startupTimeoutTimer;
+    Services::WebSocket::Service& m_webSocket;
+    Services::Rest::Service& m_rest; // Kept for binary file downloads only
 
     bool m_syncing;
-    QDateTime m_lastSyncTime;
+    bool m_startupCheckInProgress;
+    QMetaObject::Connection m_startupConnectionWatcher;
     QString m_lastError;
     QStringList m_pendingDownloads;
-    QStringList m_downloadedFilenames;
-    QStringList m_currentServerMediaIds; // Store server media IDs for final save
-    int m_activeDownloads;
 };
 } // namespace Services::Media
 

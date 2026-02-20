@@ -1,14 +1,13 @@
 #include "Service.h"
-#include "services/remoteapi/MediaInfo.h"
-#include "services/remoteapi/MediaList.h"
-#include "services/remoteapi/Service.h"
+#include "services/rest/Service.h"
+#include "services/websocket/Service.h"
 #include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
-#include <QJsonObject>
+
 using namespace Services::Media;
 
 #ifdef PLATFORM_IS_TARGET
@@ -18,57 +17,37 @@ const QString MEDIA_PATH = QStringLiteral("/workdir/build/bee/media");
 #endif
 const QString DEFAULT_MEDIA = QStringLiteral("qrc:/media/default.gif");
 constexpr int MIN_MEDIA_FILE_SIZE = 50;         // Minimum reasonable file size in bytes
-constexpr int SCAN_DELAY_MS = 500;              // Delay in milliseconds for scanning directory
-constexpr int SYNC_INTERVAL_MS = 1 * 30 * 1000; // 5 minutes
 constexpr int INITIAL_SYNC_DELAY_MS = 5000;     // 5 seconds
 
-Service::Service(RemoteApi::Service& remoteApi, QObject* parent)
+Service::Service(Services::WebSocket::Service& webSocket, Services::Rest::Service& rest, QObject* parent)
     : QObject(parent),
       m_model(this),
-      m_fileWatcher(this),
-      m_scanTimer(this),
-      m_syncTimer(this),
-      m_remoteApi(remoteApi),
+      m_startupTimeoutTimer(this),
+      m_webSocket(webSocket),
+      m_rest(rest),
       m_syncing(false),
-      m_activeDownloads(0)
+      m_startupCheckInProgress(false)
 {
-    // Setup delayed scanning to avoid excessive file system operations
-    m_scanTimer.setSingleShot(true);
-    m_scanTimer.setInterval(SCAN_DELAY_MS);
-    connect(&m_scanTimer, &QTimer::timeout, this, &Service::scanDirectory);
-
-    // Setup sync timer
-    m_syncTimer.setInterval(SYNC_INTERVAL_MS);
-    m_syncTimer.setSingleShot(false);
-    connect(&m_syncTimer, &QTimer::timeout, this, &Service::onSyncTimerTimeout);
-
-    // Connect file watcher
-    connect(&m_fileWatcher, &QFileSystemWatcher::directoryChanged, this, &Service::onDirectoryChanged);
-
-    // Setup file watcher and initial scan
-    setupFileWatcher();
-    scanDirectory();
-
-    // Connect to remote API connected changes, since we then want to start a sync, and start the sync timer. Also
-    // when we disconnect the remote API, we want to stop the sync timer.
-    connect(&m_remoteApi, &RemoteApi::Service::connectedChanged, this, [this]() {
-        if (m_remoteApi.connected()) {
-            triggerSync();
-            if (!m_syncTimer.isActive()) {
-                m_syncTimer.start();
-            }
+    // Subscribe to media change notifications from backend
+    m_webSocket.subscribe(Services::WebSocket::Topic::Media);
+    connect(&m_webSocket, &Services::WebSocket::Service::publishReceived, this, [this](const Services::WebSocket::Topic& topic, const QJsonObject& data) {
+        if (topic == Services::WebSocket::Topic::Media) {
+            onMediaReceived(data);
         }
-        else {
-            m_syncTimer.stop();
+    });
+    connect(&m_webSocket, &Services::WebSocket::Service::connectedChanged, this, [this]() {
+        if (m_webSocket.connected()) {
+             m_webSocket.request(Services::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+                 if (success) {
+                     onMediaReceived(result);
+                 } else {
+                     qWarning() << "Failed to get media:" << error;
+                 }
+             });
         }
     });
 
-    // Start sync timer if remote API is enabled
-    if (m_remoteApi.enabled()) {
-        m_syncTimer.start();
-        // Trigger initial sync after a short delay
-        QTimer::singleShot(INITIAL_SYNC_DELAY_MS, this, &Service::triggerSync);
-    }
+    performStartupCheck();
 }
 
 Model* Service::model()
@@ -81,35 +60,14 @@ bool Service::syncing() const
     return m_syncing;
 }
 
-QDateTime Service::lastSyncTime() const
-{
-    return m_lastSyncTime;
-}
-
 QString Service::lastError() const
 {
     return m_lastError;
 }
 
-void Service::triggerSync()
+bool Service::startupCheckInProgress() const
 {
-    if (m_syncing) {
-        qDebug() << "Sync already in progress";
-        return;
-    }
-
-    if (!m_remoteApi.enabled()) {
-        qDebug() << "RemoteApi not enabled, skipping media sync";
-        return;
-    }
-
-    m_syncing = true;
-    m_lastError.clear();
-    emit syncingChanged();
-    emit lastErrorChanged();
-
-    qDebug() << "Starting media synchronization...";
-    fetchMediaList();
+    return m_startupCheckInProgress;
 }
 
 QString Service::getMediaPath(const QString& name) const
@@ -130,77 +88,6 @@ QString Service::getMediaPath(const QString& name) const
     return DEFAULT_MEDIA;
 }
 
-void Service::onDirectoryChanged(const QString& path)
-{
-    Q_UNUSED(path)
-    // Use delayed scanning to avoid excessive updates when multiple files change
-    m_scanTimer.start();
-}
-
-void Service::onSyncTimerTimeout()
-{
-    triggerSync();
-}
-
-void Service::setupFileWatcher()
-{
-    QString mediaDir = getMediaDirectory();
-
-    QDir dir(mediaDir);
-    if (dir.exists()) {
-        if (!m_fileWatcher.directories().contains(mediaDir)) {
-            m_fileWatcher.addPath(mediaDir);
-        }
-    }
-    else {
-        qWarning() << "Media directory does not exist:" << mediaDir;
-    }
-}
-
-void Service::scanDirectory()
-{
-    QStringList newMedia;
-    QString mediaDir = getMediaDirectory();
-
-    QDir dir(mediaDir);
-    if (dir.exists()) {
-        // Get all GIF, PNG, JPG, and JPEG files in the directory
-        QStringList nameFilters;
-        nameFilters << QStringLiteral("*.gif") << QStringLiteral("*.GIF")
-                    << QStringLiteral("*.png") << QStringLiteral("*.PNG")
-                    << QStringLiteral("*.jpg") << QStringLiteral("*.JPG")
-                    << QStringLiteral("*.jpeg") << QStringLiteral("*.JPEG");
-
-        QFileInfoList fileList = dir.entryInfoList(nameFilters, QDir::Files | QDir::Readable);
-
-        for (const QFileInfo& fileInfo : fileList) {
-            if (isValidFile(fileInfo.absoluteFilePath())) {
-                newMedia.append(fileInfo.fileName());
-            }
-        }
-
-        // Sort alphabetically for consistent ordering
-        newMedia.sort();
-
-        qDebug() << "Found" << newMedia.size() << "media files in" << mediaDir;
-    }
-    else {
-        qWarning() << "Media directory does not exist:" << mediaDir;
-
-        // Try to create the directory
-        if (dir.mkpath(mediaDir)) {
-            qDebug() << "Created media directory:" << mediaDir;
-            setupFileWatcher();
-        }
-        else {
-            qWarning() << "Failed to create media directory:" << mediaDir;
-        }
-    }
-
-    // Update model with new media list
-    m_model.setMedia(newMedia, mediaDir);
-}
-
 bool Service::isValidFile(const QString& filePath) const
 {
     QFileInfo fileInfo(filePath);
@@ -213,13 +100,10 @@ bool Service::isValidFile(const QString& filePath) const
     }
 
     // Basic file size check (avoid empty files)
-    if (fileInfo.size() < MIN_MEDIA_FILE_SIZE) { // Minimum reasonable file size
+    if (fileInfo.size() < MIN_MEDIA_FILE_SIZE) {
         qDebug() << "Invalid media file size:" << filePath;
         return false;
     }
-
-    // Could add more sophisticated validation here (e.g., reading file header)
-    // For now, extension and size check should be sufficient
 
     return true;
 }
@@ -229,227 +113,231 @@ QString Service::getMediaDirectory() const
     return MEDIA_PATH;
 }
 
-void Service::fetchMediaList()
+void Service::onMediaReceived(const QJsonObject& data)
 {
-    MediaList listTemplate;
-    listTemplate.deviceId = m_remoteApi.deviceId();
+    qInfo() << "Received media notification from backend";
+    if (data.isEmpty()) {
+        qWarning() << "Received empty media data";
+         return;
+    }
 
-    m_remoteApi.fetchObject(listTemplate, [this](bool success, const MediaList& list, const QString& error) {
-        if (!success) {
-            completeSyncWithError("Failed to fetch media list: " + error);
-            return;
-        }
+    setSyncing(true);
 
-        qDebug() << "Fetched" << list.count() << "media IDs from server";
+    QJsonArray filesArray = data["files"].toArray();
+    QStringList serverFilenames;
+    for (const auto& val : filesArray) {
+        serverFilenames.append(val.toString());
+    }
 
-        // Load local media list
-        MediaList localList = MediaList::loadFromFile(getMediaDirectory());
-        QStringList localMediaIds = localList.mediaIds;
-        QStringList serverMediaIds = list.mediaIds;
-
-        qDebug() << "Local media.json has" << localMediaIds.count() << "media IDs";
-
-        // Determine what to add and what to remove
-        QStringList mediaToDownload;
-        QStringList mediaToDelete;
-
-        // Find media to download (in server but not in local)
-        for (const QString& serverId : serverMediaIds) {
-            if (!localMediaIds.contains(serverId)) {
-                mediaToDownload.append(serverId);
-            }
-        }
-
-        // Find media to delete (in local but not in server)
-        for (const QString& localId : localMediaIds) {
-            if (!serverMediaIds.contains(localId)) {
-                mediaToDelete.append(localId);
-            }
-        }
-
-        if (mediaToDownload.isEmpty() && mediaToDelete.isEmpty()) {
-            qDebug() << "Media lists are in sync, no changes needed";
-            completeSyncWithSuccess();
-            return;
-        }
-        else {
-            qDebug() << "Media to download:" << mediaToDownload.count() << " , to delete: " << mediaToDelete.count();
-        }
-
-        // Delete old media files first (using metadata to find filenames)
-        if (!mediaToDelete.isEmpty()) {
-            for (const QString& mediaId : mediaToDelete) {
-                // Load metadata to get filename
-                MediaInfo metadata = MediaInfo::loadMetadata(getMediaDirectory(), mediaId);
-                if (!metadata.filename.isEmpty()) {
-                    QString filePath = getMediaDirectory() + "/" + metadata.filename;
-                    if (QFile::exists(filePath)) {
-                        if (QFile::remove(filePath)) {
-                            qDebug() << "Deleted old media file:" << metadata.filename;
-                        }
-                        else {
-                            qWarning() << "Failed to delete old media file:" << metadata.filename;
-                        }
-                    }
-                }
-                // Delete metadata file
-                MediaInfo::deleteMetadata(getMediaDirectory(), mediaId);
-            }
-        }
-
-        // If we have media to download, start downloading
-        if (!mediaToDownload.isEmpty()) {
-            m_pendingDownloads.clear();
-            m_downloadedFilenames.clear();
-            m_currentServerMediaIds = serverMediaIds; // Store for final save
-            m_activeDownloads = 0;
-
-            for (const QString& mediaId : mediaToDownload) {
-                downloadMedia(mediaId);
-            }
-        }
-        else {
-            // No downloads, but we had deletions
-            // Update local media.json to match server
-            qDebug() << "No media to download, completing sync after deletions.";
-            MediaList updatedList;
-            updatedList.deviceId = m_remoteApi.deviceId();
-            updatedList.mediaIds = serverMediaIds;
-            updatedList.saveToFile(getMediaDirectory());
-            completeSyncWithSuccess();
-        }
-    });
+    syncWithServerFiles(serverFilenames);
 }
 
-void Service::downloadMedia(const QString& mediaId)
+void Service::syncWithServerFiles(const QStringList& serverFilenames)
 {
-    m_activeDownloads++;
+    // Current local files
+    QString mediaDir = getMediaDirectory();
+    QDir dir(mediaDir);
+    if (!dir.exists()) {
+        dir.mkpath(mediaDir);
+    }
+    QStringList localFilenames = dir.entryList(QDir::Files);
 
-    if (!m_remoteApi.enabled()) {
-        m_activeDownloads--;
-        m_pendingDownloads.removeOne(mediaId);
-        qWarning() << "RemoteApi not enabled";
+    QStringList mediaToDownload;
+    QStringList mediaToDelete;
+
+    for (const QString& serverFile : serverFilenames) {
+        if (!localFilenames.contains(serverFile)) {
+            mediaToDownload.append(serverFile);
+        }
+    }
+
+    for (const QString& localFile : localFilenames) {
+        if (!serverFilenames.contains(localFile)) {
+            if (isValidFile(mediaDir + "/" + localFile)) {
+                mediaToDelete.append(localFile);
+            }
+        }
+    }
+
+    // Delete removed files and update model
+    for (const QString& file : mediaToDelete) {
+        QFile::remove(mediaDir + "/" + file);
+        m_model.removeItem(file);
+    }
+
+    // Load already-present local files into the model
+    for (const QString& file : serverFilenames) {
+        if (!mediaToDownload.contains(file)) {
+            QString filePath = mediaDir + "/" + file;
+            QFileInfo fileInfo(filePath);
+            QString suffix = fileInfo.suffix().toLower();
+            QString type = "unknown";
+            if (suffix == "gif") type = "image/gif";
+            else if (suffix == "png") type = "image/png";
+            else if (suffix == "jpg" || suffix == "jpeg") type = "image/jpeg";
+
+            if (!m_model.contains(file)) {
+                m_model.addItem(new Item(file, file, filePath, type, fileInfo.size(), nullptr));
+            }
+        }
+    }
+
+    if (mediaToDownload.isEmpty()) {
+        completeSyncWithSuccess();
         return;
     }
 
-    // Create MediaInfo template with just the ID
-    MediaInfo infoTemplate;
-    infoTemplate.id = mediaId;
-    infoTemplate.deviceId = m_remoteApi.deviceId();
+    // Download new files
+    m_pendingDownloads = mediaToDownload;
+    for (const QString& file : mediaToDownload) {
+        downloadMedia(file);
+    }
+}
 
-    m_remoteApi.fetchObject(infoTemplate, [this, mediaId](bool success, const MediaInfo& fetchedInfo, const QString& error) {
-        m_activeDownloads--;
-        m_pendingDownloads.removeOne(mediaId);
+void Service::downloadMedia(const QString& filename)
+{
+    // Binary file download still uses REST
+    QString endpoint = "media/" + filename;
+
+    m_rest.download(endpoint, [this, filename](bool success, const QByteArray& data, const QString& error) {
+        m_pendingDownloads.removeOne(filename);
 
         if (!success) {
-            qWarning() << "Failed to fetch media" << mediaId << ":" << error;
-            if (m_activeDownloads == 0) {
-                // Cleanup with filenames we did manage to fetch
-                // Save updated media.json even on partial failure
-                MediaList updatedList;
-                updatedList.deviceId = m_remoteApi.deviceId();
-                updatedList.mediaIds = m_currentServerMediaIds;
-                updatedList.saveToFile(getMediaDirectory());
-                completeSyncWithError("Failed to download some media files");
+            qWarning() << "Failed to download" << filename << ":" << error;
+            if (m_pendingDownloads.isEmpty()) {
+                if (m_lastError.isEmpty()) completeSyncWithSuccess();
+                else completeSyncWithError("Some downloads failed");
             }
             return;
         }
 
-        // Track this filename for cleanup
-        m_downloadedFilenames.append(fetchedInfo.filename);
-
-        // Check if file already exists
-        QString mediaDir = getMediaDirectory();
-        QString filePath = QDir(mediaDir).absoluteFilePath(fetchedInfo.filename);
-
-        if (QFile::exists(filePath)) {
-            qDebug() << "Media file already exists:" << fetchedInfo.filename;
-
-            // Save/update metadata even if file exists
-            fetchedInfo.saveMetadata(getMediaDirectory());
-
-            // File exists, skip download
-            if (m_activeDownloads == 0) {
-                if (m_pendingDownloads.isEmpty()) {
-                    // Save updated media.json with server's media list
-                    MediaList updatedList;
-                    updatedList.deviceId = m_remoteApi.deviceId();
-                    updatedList.mediaIds = m_currentServerMediaIds;
-                    updatedList.saveToFile(getMediaDirectory());
-                    completeSyncWithSuccess();
-                }
-                else {
-                    // Save updated media.json even on partial failure
-                    MediaList updatedList;
-                    updatedList.deviceId = m_remoteApi.deviceId();
-                    updatedList.mediaIds = m_currentServerMediaIds;
-                    updatedList.saveToFile(getMediaDirectory());
-                    completeSyncWithError("Some downloads failed");
-                }
-            }
-            return;
-        }
-
-        // Save the binary data to file
+        QString filePath = getMediaDirectory() + "/" + filename;
         QFile file(filePath);
         if (file.open(QIODevice::WriteOnly)) {
-            file.write(fetchedInfo.binaryData);
+            file.write(data);
             file.close();
-            qDebug() << "Downloaded media:" << fetchedInfo.filename << "(" << fetchedInfo.binaryData.size() << "bytes)";
+            qDebug() << "Downloaded:" << filename;
 
-            // Save metadata for this media
-            fetchedInfo.saveMetadata(getMediaDirectory());
-        }
-        else {
-            qWarning() << "Failed to save media file:" << filePath;
+            // Construct and add Item directly to the model
+            QFileInfo fileInfo(filePath);
+            QString suffix = fileInfo.suffix().toLower();
+            QString type = "unknown";
+            if (suffix == "gif") type = "image/gif";
+            else if (suffix == "png") type = "image/png";
+            else if (suffix == "jpg" || suffix == "jpeg") type = "image/jpeg";
+
+            m_model.addItem(new Item(filename, filename, filePath, type, fileInfo.size(), nullptr));
+        } else {
+            qWarning() << "Failed to write downloaded file:" << filePath;
         }
 
-        // Check if all downloads are complete
-        if (m_activeDownloads == 0) {
-            if (m_pendingDownloads.isEmpty()) {
-                // Save updated media.json with server's media list
-                MediaList updatedList;
-                updatedList.deviceId = m_remoteApi.deviceId();
-                updatedList.mediaIds = m_currentServerMediaIds;
-                updatedList.saveToFile(getMediaDirectory());
-                completeSyncWithSuccess();
-            }
-            else {
-                // Save updated media.json even on partial failure
-                MediaList updatedList;
-                updatedList.deviceId = m_remoteApi.deviceId();
-                updatedList.mediaIds = m_currentServerMediaIds;
-                updatedList.saveToFile(getMediaDirectory());
-                completeSyncWithError("Some downloads failed");
-            }
+        if (m_pendingDownloads.isEmpty()) {
+            completeSyncWithSuccess();
         }
     });
 }
 
 void Service::completeSyncWithSuccess()
 {
-    m_syncing = false;
-    m_lastSyncTime = QDateTime::currentDateTime();
+    setSyncing(false);
     m_lastError.clear();
 
-    emit syncingChanged();
-    emit lastSyncTimeChanged();
     emit lastErrorChanged();
     emit syncCompleted();
 
-    qDebug() << "Media sync completed successfully";
+    if (m_startupCheckInProgress) {
+        completeStartupCheck();
+    }
 
-    // Trigger rescan to update available media list
-    m_scanTimer.start();
+    qDebug() << "Media sync completed successfully";
 }
 
 void Service::completeSyncWithError(const QString& error)
 {
-    m_syncing = false;
+    setSyncing(false);
     m_lastError = error;
 
-    emit syncingChanged();
     emit lastErrorChanged();
 
     qWarning() << "Media sync failed:" << error;
+
+    if (m_startupCheckInProgress) {
+        completeStartupCheck();
+    }
+}
+
+void Service::performStartupCheck()
+{
+    if (startupCheckInProgress()) {
+        return;
+    }
+
+    setSyncing(true);
+    setStartupCheckInProgress(true);
+
+    m_startupTimeoutTimer.setSingleShot(true);
+    m_startupTimeoutTimer.setInterval(INITIAL_SYNC_DELAY_MS);
+    connect(&m_startupTimeoutTimer, &QTimer::timeout, this, [this]() {
+        if (m_startupCheckInProgress) {
+            qWarning() << "Media startup check timed out, marking complete";
+            completeStartupCheck();
+        }
+    });
+    m_startupTimeoutTimer.start();
+
+    // If already connected, sync immediately
+    if (m_webSocket.connected()) {
+        m_webSocket.request(Services::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+            if (!success) {
+                completeSyncWithError("Failed to fetch media list: " + error);
+                return;
+            }
+
+            onMediaReceived(result);
+        });
+        return;
+    }
+
+    // Otherwise wait for the connection
+    qInfo() << "Media: Waiting for WebSocket connection (max" << INITIAL_SYNC_DELAY_MS << "ms)...";
+    
+     m_startupConnectionWatcher = connect(&m_webSocket,
+                                         &Services::WebSocket::Service::connectedChanged,
+                                         this,
+                                         [this]() {
+                                             if (m_webSocket.connected() && startupCheckInProgress()) {
+                                                 disconnect(m_startupConnectionWatcher);
+                                                 m_webSocket.request(Services::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+                                                     if (success) {
+                                                         onMediaReceived(result);
+                                                     } else {
+                                                         completeSyncWithError("Failed to fetch media list: " + error);
+                                                     }
+                                                 });
+                                             }
+                                         });
+}
+
+void Service::completeStartupCheck()
+{
+    m_startupTimeoutTimer.stop();
+    disconnect(m_startupConnectionWatcher);
+    setStartupCheckInProgress(false);
+    qInfo() << "Media startup check complete.";
+}
+
+void Service::setSyncing(bool syncing)
+{
+    if (m_syncing != syncing) {
+        m_syncing = syncing;
+        emit syncingChanged();
+    }
+}
+
+void Service::setStartupCheckInProgress(bool inProgress)
+{
+    if (m_startupCheckInProgress != inProgress) {
+        m_startupCheckInProgress = inProgress;
+        emit startupCheckInProgressChanged();
+    }
 }

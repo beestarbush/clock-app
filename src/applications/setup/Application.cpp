@@ -2,8 +2,6 @@
 #include "applications/common/Application.h"
 #include "applications/common/Configuration.h"
 #include "services/configuration/Service.h"
-#include "services/remoteapi/DeviceStatus.h"
-#include "services/remoteapi/Service.h"
 #include <QDate>
 #include <QDebug>
 #include <QJsonObject>
@@ -24,19 +22,21 @@ const QColor PROPERTY_BASE_COLOR_DEFAULT = QColor("#000000");
 const QString PROPERTY_ACCENT_COLOR_KEY = QStringLiteral("accent-color");
 const QColor PROPERTY_ACCENT_COLOR_DEFAULT = QColor("#02996c");
 
+const QString PROPERTY_DEVICE_ID_KEY = QStringLiteral("device-id");
+const QString PROPERTY_DEVICE_ID_DEFAULT = QStringLiteral("SN-XXXX");
+
 Application::Application(Common::DynamicApplicationMap& applications,
-                         Services::RemoteApi::Service& remoteApi,
                          Services::Configuration::Service& configurationService,
                          QObject* parent)
     : QObject(parent),
       m_setupComplete(PROPERTY_SETUP_COMPLETE_DEFAULT),
+      m_deviceId(PROPERTY_DEVICE_ID_DEFAULT),
       m_currentPanel(Welcome),
       m_dialWheel(),
       m_mediaSelection(),
       m_colorSelection(),
       m_applications(applications),
       m_currentAppIndex(0),
-      m_remoteApi(remoteApi),
       m_configurationService(configurationService),
       m_pendulumBobColor(PROPERTY_PENDULUM_BOB_COLOR_DEFAULT),
       m_pendulumRodColor(PROPERTY_PENDULUM_ROD_COLOR_DEFAULT),
@@ -50,6 +50,20 @@ Application::Application(Common::DynamicApplicationMap& applications,
 bool Application::isSetupComplete() const
 {
     return m_setupComplete;
+}
+
+QString Application::deviceId() const
+{
+    return m_deviceId;
+}
+
+void Application::setDeviceId(const QString& id)
+{
+    if (m_deviceId == id) return;
+
+    m_deviceId = id;
+    saveProperty(PROPERTY_DEVICE_ID_KEY, id);
+    emit deviceIdChanged();
 }
 
 Application::PanelType Application::currentPanel() const
@@ -104,9 +118,6 @@ void Application::finish()
 
     saveProperty(PROPERTY_SETUP_COMPLETE_KEY, true);
 
-    // Register device with server when setup is complete
-    registerDevice();
-
     emit dialWheelChanged();
     emit mediaSelectionChanged();
     emit colorSelectionChanged();
@@ -115,7 +126,8 @@ void Application::finish()
     emit setupCompleteChanged();
 
     // Persist the current configuration state and trigger reload
-    m_configurationService.save(buildSystemConfiguration(), m_applications);
+    // TODO: push configuration to backend.
+    // m_configurationService.save(buildSystemConfiguration(), m_applications);
 }
 
 void Application::next()
@@ -137,9 +149,10 @@ void Application::next()
     // Determine next panel
     PanelType nextPanel = getNextPanel(m_currentPanel);
 
-    // If transitioning from an app phase to AppEnable, advance to next app
+    // If cycling back to AppEnable from within an app phase, advance to next app.
+    // Do NOT advance when first entering AppEnable from DeviceId — index 0 is already correct.
     bool appAdvanced = false;
-    if (nextPanel == AppEnable && m_currentPanel != ServerConnection) {
+    if (nextPanel == AppEnable && m_currentPanel != DeviceId) {
         appAdvanced = advanceToNextApp();
         if (!appAdvanced) {
             nextPanel = Finish;
@@ -206,6 +219,7 @@ void Application::loadProperties()
     static QSettings settings;
     settings.beginGroup(PROPERTIES_GROUP_NAME);
     m_setupComplete = settings.value(PROPERTY_SETUP_COMPLETE_KEY, PROPERTY_SETUP_COMPLETE_DEFAULT).toBool();
+    m_deviceId = settings.value(PROPERTY_DEVICE_ID_KEY, PROPERTY_DEVICE_ID_DEFAULT).toString();
     settings.endGroup();
 }
 
@@ -216,24 +230,6 @@ void Application::saveProperty(const QString& key, const QVariant& value)
     settings.setValue(key, value);
     settings.endGroup();
     settings.sync();
-}
-
-void Application::registerDevice()
-{
-    if (!m_remoteApi.enabled()) {
-        return;
-    }
-
-    DeviceStatus status;
-    status.deviceId = m_remoteApi.deviceId();
-    m_remoteApi.createObject(status, [](bool success, const QString& error) {
-        if (success) {
-            qDebug() << "Device registered successfully";
-        }
-        else {
-            qWarning() << "Failed to register device:" << error;
-        }
-    });
 }
 
 bool Application::advanceToNextApp()
@@ -252,9 +248,6 @@ Application::PanelType Application::getNextPanel(PanelType current) const
         return DeviceId;
 
     case DeviceId:
-        return ServerConnection;
-
-    case ServerConnection:
         if (!m_applications.isEmpty()) {
             return AppEnable;
         }

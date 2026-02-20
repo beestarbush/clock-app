@@ -6,11 +6,6 @@
 #include <QObject>
 #include <QString>
 
-namespace Services::RemoteApi
-{
-class Service;
-}
-
 namespace Services::Configuration
 {
 class Service;
@@ -79,6 +74,7 @@ class Application : public QObject
     Q_PROPERTY(QColor pendulumBackgroundColor READ pendulumBackgroundColor WRITE setPendulumBackgroundColor NOTIFY pendulumBackgroundColorChanged)
     Q_PROPERTY(QColor baseColor READ baseColor WRITE setBaseColor NOTIFY baseColorChanged)
     Q_PROPERTY(QColor accentColor READ accentColor WRITE setAccentColor NOTIFY accentColorChanged)
+    Q_PROPERTY(QString deviceId READ deviceId WRITE setDeviceId NOTIFY deviceIdChanged)
 
   public:
     // Setup panel types - generic phases
@@ -86,21 +82,23 @@ class Application : public QObject
     {
         Welcome = 0,
         DeviceId = 1,
-        ServerConnection = 2,
-        AppEnable = 3,
-        AppDateTime = 4,
-        AppBackground = 5,
-        AppOpacity = 6,
-        AppBaseColor = 7,
-        AppAccentColor = 8,
-        Finish = 9,
-        PanelTypeCount = 10
+        AppEnable = 2,
+        AppDateTime = 3,
+        AppBackground = 4,
+        AppOpacity = 5,
+        AppBaseColor = 6,
+        AppAccentColor = 7,
+        Finish = 8,
+        PanelTypeCount = 9
     };
     Q_ENUM(PanelType)
 
-    Application(Common::DynamicApplicationMap& applications, Services::RemoteApi::Service& remoteApi, Services::Configuration::Service& configurationService, QObject* parent = nullptr);
+    Application(Common::DynamicApplicationMap& applications, Services::Configuration::Service& configurationService, QObject* parent = nullptr);
 
     bool isSetupComplete() const;
+
+    QString deviceId() const;
+    void setDeviceId(const QString& id);
 
     PanelType currentPanel() const;
     Common::Application* currentApp() const;
@@ -155,15 +153,16 @@ class Application : public QObject
     void pendulumBackgroundColorChanged();
     void baseColorChanged();
     void accentColorChanged();
+    void deviceIdChanged();
 
   private:
     void loadProperties();
     void saveProperty(const QString& key, const QVariant& value);
-    void registerDevice();
     PanelType getNextPanel(PanelType current) const;
     bool advanceToNextApp();
 
     bool m_setupComplete;
+    QString m_deviceId;
 
     // Current panel state
     PanelType m_currentPanel;
@@ -178,7 +177,6 @@ class Application : public QObject
     int m_currentAppIndex;
 
     // Services
-    Services::RemoteApi::Service& m_remoteApi;
     Services::Configuration::Service& m_configurationService;
 
     // System configuration

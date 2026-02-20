@@ -23,10 +23,16 @@ QVariant Model::data(const QModelIndex& index, int role) const
     const Item* item = m_items.at(index.row());
 
     switch (role) {
+    case IdRole:
+        return item->id();
     case FilenameRole:
         return item->filename();
     case PathRole:
         return item->path();
+    case TypeRole:
+        return item->type();
+    case SizeRole:
+        return item->size();
     case IsValidRole:
         return item->isValid();
     default:
@@ -37,8 +43,11 @@ QVariant Model::data(const QModelIndex& index, int role) const
 QHash<int, QByteArray> Model::roleNames() const
 {
     QHash<int, QByteArray> roles;
+    roles[IdRole] = "id";
     roles[FilenameRole] = "filename";
     roles[PathRole] = "path";
+    roles[TypeRole] = "type";
+    roles[SizeRole] = "size";
     roles[IsValidRole] = "isValid";
     return roles;
 }
@@ -78,7 +87,7 @@ int Model::indexOf(const QString& filename) const
     return -1;
 }
 
-void Model::setMedia(const QStringList& filenames, const QString& basePath)
+void Model::setMedia(const QList<Item*>& items)
 {
     // Clear existing items
     if (!m_items.isEmpty()) {
@@ -88,19 +97,49 @@ void Model::setMedia(const QStringList& filenames, const QString& basePath)
         endResetModel();
     }
 
-    if (filenames.isEmpty()) {
+    if (items.isEmpty()) {
         emit countChanged();
         return;
     }
 
     // Add new items
-    beginInsertRows(QModelIndex(), 0, filenames.size() - 1);
-    for (const QString& filename : filenames) {
-        QString fullPath = QDir(basePath).absoluteFilePath(filename);
-        Item* item = new Item(filename, fullPath, this);
-        m_items.append(item);
+    beginInsertRows(QModelIndex(), 0, items.size() - 1);
+    m_items = items;
+    
+    // Reparent items to this model to ensure cleanup
+    for (Item* item : m_items) {
+        if (item) {
+            item->setParent(this);
+        }
     }
+    
     endInsertRows();
+
+    emit countChanged();
+}
+
+void Model::addItem(Item* item)
+{
+    if (!item) return;
+
+    int row = m_items.size();
+    beginInsertRows(QModelIndex(), row, row);
+    item->setParent(this);
+    m_items.append(item);
+    endInsertRows();
+
+    emit countChanged();
+}
+
+void Model::removeItem(const QString& filename)
+{
+    int row = indexOf(filename);
+    if (row < 0) return;
+
+    beginRemoveRows(QModelIndex(), row, row);
+    Item* item = m_items.takeAt(row);
+    delete item;
+    endRemoveRows();
 
     emit countChanged();
 }

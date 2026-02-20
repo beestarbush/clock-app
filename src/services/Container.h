@@ -8,7 +8,8 @@
 #include "media/Service.h"
 #include "notification/Service.h"
 #include "qmlinterface/Service.h"
-#include "remoteapi/Service.h"
+#include "rest/Service.h"
+#include "websocket/Service.h"
 #include "systemmonitor/Service.h"
 #include "version/Service.h"
 
@@ -32,7 +33,8 @@ class Container : public QObject
     Q_PROPERTY(Services::Notification::Service* notification MEMBER m_notification CONSTANT)
     Q_PROPERTY(Services::QmlInterface::Service* qmlInterface MEMBER m_qmlInterface CONSTANT)
     Q_PROPERTY(Services::Version::Service* version MEMBER m_version CONSTANT)
-    Q_PROPERTY(Services::RemoteApi::Service* remoteApi MEMBER m_remoteApi CONSTANT)
+    Q_PROPERTY(Services::Rest::Service* rest MEMBER m_rest CONSTANT)
+    Q_PROPERTY(Services::WebSocket::Service* websocket MEMBER m_websocket CONSTANT)
     Q_PROPERTY(Services::SystemMonitor::Service* systemMonitor MEMBER m_systemMonitor CONSTANT)
     Q_PROPERTY(Services::Configuration::Service* configuration MEMBER m_configuration CONSTANT)
   public:
@@ -44,7 +46,8 @@ class Container : public QObject
 
   private:
     Version::Service* m_version;
-    RemoteApi::Service* m_remoteApi;
+    Rest::Service* m_rest;
+    WebSocket::Service* m_websocket;
     Notification::Service* m_notification;
     Media::Service* m_media;
     SystemMonitor::Service* m_systemMonitor;

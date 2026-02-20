@@ -13,7 +13,7 @@ Circle {
         id: panelContainer
         anchors.fill: parent
 
-        property bool isLoading: Backend.Applications.reloading || Backend.Services.configuration.startupCheckInProgress
+        property bool isLoading: Backend.Applications.reloading || Backend.Services.configuration.startupCheckInProgress || Backend.Services.media.startupCheckInProgress
         property Panel initialPanel: setupPanel.enabled ? setupPanel : watchfacesPanel
 
         currentIndex: {

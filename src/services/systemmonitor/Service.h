@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QTimer>
 
-namespace Services::RemoteApi
+namespace Services::WebSocket
 {
 class Service;
 }
@@ -38,7 +38,7 @@ class Service : public QObject
     Q_OBJECT
 
   public:
-    explicit Service(Services::RemoteApi::Service& remoteApi,
+    explicit Service(Services::WebSocket::Service& webSocket,
                      Drivers::Temperature::Driver& temperature,
                      Drivers::System::Driver& system,
                      Services::Version::Service& version,
@@ -49,7 +49,7 @@ class Service : public QObject
     void monitor();
     void report();
 
-    Services::RemoteApi::Service& m_remoteApi;
+    Services::WebSocket::Service& m_webSocket;
     Drivers::Temperature::Driver& m_temperature;
     Drivers::System::Driver& m_system;
     Services::Version::Service& m_version;

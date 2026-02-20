@@ -6,9 +6,9 @@
 #include <QObject>
 #include <QTimer>
 
-class DeviceConfiguration;
+#include "DeviceConfiguration.h"
 
-namespace Services::RemoteApi
+namespace Services::WebSocket
 {
 class Service;
 }
@@ -24,7 +24,12 @@ class Service : public QObject
     Q_PROPERTY(bool startupCheckInProgress READ startupCheckInProgress NOTIFY startupCheckInProgressChanged)
 
   public:
-    explicit Service(Services::RemoteApi::Service& remoteApi, QObject* parent = nullptr);
+    explicit Service(Services::WebSocket::Service& webSocket, QObject* parent = nullptr);
+
+    DeviceConfiguration* getCurrentConfiguration();
+
+    // Trigger signals
+    void triggerConfigurationChanged();
 
     // Properties
     bool syncing() const;
@@ -32,40 +37,34 @@ class Service : public QObject
     QString configVersion() const;
     bool startupCheckInProgress() const;
 
-    DeviceConfiguration* getCurrentConfiguration();
-
-    Q_INVOKABLE void triggerConfigurationChanged();
-    void save(const QJsonObject& systemConfiguration, const Common::DynamicApplicationMap& applications);
-
   signals:
+    void configurationChanged();
     void syncingChanged();
     void lastSyncTimeChanged();
     void configVersionChanged();
-    void configurationChanged();
     void startupCheckInProgressChanged();
 
-  private slots:
-    void onSyncTimerTimeout();
-
   private:
-    void loadLocalConfiguration();
-    void fetchConfiguration();
     void performStartupCheck();
     void completeStartupCheck();
+    void loadLocalConfiguration();
     void updateCurrentConfig(const DeviceConfiguration& config);
 
     void setSyncing(bool syncing);
     void setConfigVersion(const QString& version);
     void setStartupCheckInProgress(bool inProgress);
+    
+    // Slot for incoming config data
+    void onConfigurationReceived(const QJsonObject& configJson);
 
-    Services::RemoteApi::Service& m_remoteApi;
-    QTimer m_syncTimer;
+    Services::WebSocket::Service& m_webSocket;
     QTimer m_startupTimeoutTimer;
+    QMetaObject::Connection m_startupConnectionWatcher;
+
     bool m_syncing;
     bool m_startupCheckInProgress;
-    QMetaObject::Connection m_startupConnectionWatcher;
-    QDateTime m_lastSyncTime;
     QString m_configVersion;
+    QDateTime m_lastSyncTime;
     DeviceConfiguration* m_currentConfig;
 };
 } // namespace Services::Configuration

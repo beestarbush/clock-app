@@ -6,6 +6,9 @@
 #include <QJsonDocument>
 #include <algorithm>
 
+namespace Services::Configuration
+{
+
 DeviceConfiguration::DeviceConfiguration()
     : version("1.0")
 {
@@ -71,8 +74,7 @@ DeviceConfiguration DeviceConfiguration::fromJson(const QJsonObject& json)
         config.systemConfiguration = configJson["system-configuration"].toObject();
     }
 
-    // Deserialize applications array - store JSON objects directly
-    // Each contains metadata (id, type, name, order, watchface) + configuration properties
+    // Deserialize applications array
     QJsonArray appsArray = configJson["applications"].toArray();
     for (const QJsonValue& value : appsArray) {
         if (value.isObject()) {
@@ -85,25 +87,8 @@ DeviceConfiguration DeviceConfiguration::fromJson(const QJsonObject& json)
 
 bool DeviceConfiguration::isValid() const
 {
-    return !version.isEmpty() && !deviceId.isEmpty();
-}
-
-QString DeviceConfiguration::getEndpoint() const
-{
-    if (deviceId.isEmpty()) {
-        return "/api/configuration";
-    }
-    return QString("/api/configuration/%1").arg(deviceId);
-}
-
-QString DeviceConfiguration::getFetchEndpoint() const
-{
-    return getEndpoint();
-}
-
-QString DeviceConfiguration::getUpdateEndpoint() const
-{
-    return getEndpoint();
+    // Basic validation
+    return !version.isEmpty(); 
 }
 
 void DeviceConfiguration::saveToFile(const QString& directory) const
@@ -237,3 +222,5 @@ void DeviceConfiguration::sortApplicationsByOrder()
         return a["order"].toInt() < b["order"].toInt();
     });
 }
+
+} // namespace Services::Configuration

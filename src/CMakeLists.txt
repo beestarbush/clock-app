@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(ClockApp VERSION 0.1 LANGUAGES CXX)
+project(clock-app VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Network)
+find_package(Qt6 REQUIRED COMPONENTS Quick Network WebSockets)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-qt_add_executable(clockapp
+qt_add_executable(clock-app
     main.cpp
     git_version.h
     drivers/Container.cpp
@@ -39,21 +39,17 @@ qt_add_executable(clockapp
     services/notification/Service.h
     services/qmlinterface/Service.cpp
     services/qmlinterface/Service.h
-    services/remoteapi/Service.cpp
-    services/remoteapi/Service.h
+    services/rest/Service.h
+    services/rest/Service.cpp
+    services/websocket/Service.h
+    services/websocket/Service.cpp
+    services/websocket/Types.h
     services/systemmonitor/Service.cpp
     services/systemmonitor/Service.h
     services/version/Service.cpp
     services/version/Service.h
-    services/remoteapi/SerializableObject.h
-    services/remoteapi/DeviceStatus.cpp
-    services/remoteapi/DeviceStatus.h
-    services/remoteapi/MediaInfo.cpp
-    services/remoteapi/MediaInfo.h
-    services/remoteapi/MediaList.cpp
-    services/remoteapi/MediaList.h
-    services/remoteapi/DeviceConfiguration.cpp
-    services/remoteapi/DeviceConfiguration.h
+    services/configuration/DeviceConfiguration.cpp
+    services/configuration/DeviceConfiguration.h
     services/configuration/Service.cpp
     services/configuration/Service.h
     services/notification/Item.cpp
@@ -95,10 +91,10 @@ qt_add_executable(clockapp
     applications/watchface/Application.h
 )
 
-target_include_directories(clockapp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(clock-app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # This only contains default media (when lookup on filesystem is not possible)
-qt_add_resources(clockapp "media"
+qt_add_resources(clock-app "media"
     PREFIX "/"
     FILES
         "media/default.gif"
@@ -117,20 +113,20 @@ add_subdirectory(qml)
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
-set_target_properties(clockapp PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appClockApp
+set_target_properties(clock-app PROPERTIES
+#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.clock-app
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
 
-target_link_libraries(clockapp
-    PRIVATE Qt6::Quick Qt6::Network MainLibplugin ComponentLibplugin PanelLibplugin ResourcesLibplugin
+target_link_libraries(clock-app
+    PRIVATE Qt6::Quick Qt6::Network Qt6::WebSockets MainLibplugin ComponentLibplugin PanelLibplugin ResourcesLibplugin
 )
 
 include(GNUInstallDirs)
-install(TARGETS clockapp
+install(TARGETS clock-app
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

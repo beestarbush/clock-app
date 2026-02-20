@@ -1,8 +1,7 @@
 #include "Service.h"
 #include "applications/common/Application.h"
 #include "applications/common/Configuration.h"
-#include "services/remoteapi/DeviceConfiguration.h"
-#include "services/remoteapi/Service.h"
+#include "services/websocket/Service.h"
 #include <QDebug>
 #include <QJsonObject>
 
@@ -13,26 +12,33 @@ const QString CONFIGURATION_PATH = QStringLiteral("/usr/share/bee/configuration"
 #else
 const QString CONFIGURATION_PATH = QStringLiteral("/workdir/build/bee/configuration");
 #endif
-constexpr int SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
 constexpr int STARTUP_CHECK_TIMEOUT_MS = 10000; // 10 seconds
 
-Service::Service(Services::RemoteApi::Service& remoteApi, QObject* parent)
+Service::Service(Services::WebSocket::Service& webSocket, QObject* parent)
     : QObject(parent),
-      m_remoteApi(remoteApi),
-      m_syncTimer(this),
+      m_webSocket(webSocket),
       m_startupTimeoutTimer(this),
       m_syncing(false),
       m_startupCheckInProgress(false),
       m_currentConfig(nullptr)
 {
-    connect(&m_syncTimer, &QTimer::timeout, this, &Service::onSyncTimerTimeout);
-
-    m_startupTimeoutTimer.setSingleShot(true);
-    m_startupTimeoutTimer.setInterval(STARTUP_CHECK_TIMEOUT_MS);
-    connect(&m_startupTimeoutTimer, &QTimer::timeout, this, [this]() {
-        if (m_startupCheckInProgress) {
-            qWarning() << "Startup check timed out after" << STARTUP_CHECK_TIMEOUT_MS << "ms, using local configuration";
-            completeStartupCheck();
+    // Subscribe to config change notifications
+    m_webSocket.subscribe(Services::WebSocket::Topic::Configuration);
+    connect(&m_webSocket, &Services::WebSocket::Service::publishReceived, this, [this](const Services::WebSocket::Topic& topic, const QJsonObject& data) {
+        if (topic == Services::WebSocket::Topic::Configuration) {
+            onConfigurationReceived(data);
+        }
+    });
+    connect(&m_webSocket, &Services::WebSocket::Service::connectedChanged, this, [this]() {
+        if (m_webSocket.connected()) {
+            m_webSocket.request(Services::WebSocket::Method::GetConfig, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+                if (success) {
+                    onConfigurationReceived(result);
+                } else {
+                    qWarning() << "Failed to get config:" << error;
+                }
+            });
         }
     });
 
@@ -50,130 +56,83 @@ void Service::triggerConfigurationChanged()
     emit configurationChanged();
 }
 
-void Service::save(const QJsonObject& systemConfiguration, const Common::DynamicApplicationMap& applications)
+void Service::onConfigurationReceived(const QJsonObject& configJson)
 {
-    DeviceConfiguration newConfig;
-
-    // Preserve existing metadata if available
-    if (m_currentConfig && m_currentConfig->isValid()) {
-        newConfig.version = m_currentConfig->version;
-        newConfig.deviceId = m_currentConfig->deviceId;
-        newConfig.activeAppId = m_currentConfig->activeAppId;
-    }
-    else {
-        newConfig.deviceId = m_remoteApi.deviceId();
-    }
-
-    newConfig.systemConfiguration = systemConfiguration;
-
-    // Build application configurations from the current in-memory applications
-    for (auto it = applications.constBegin(); it != applications.constEnd(); ++it) {
-        Common::Application* app = it.value();
-        if (!app || !app->configuration()) {
-            continue;
-        }
-
-        QJsonObject appJson = app->configuration()->toJson();
-
-        // Add metadata
-        appJson["id"] = app->id();
-        appJson["type"] = Common::typeToString(app->type());
-        appJson["name"] = app->displayName();
-        appJson["order"] = app->order();
-        appJson["watchface"] = Common::watchfaceToString(app->watchface());
-
-        newConfig.addApplication(appJson);
-    }
-
-    newConfig.sortApplicationsByOrder();
-
-    updateCurrentConfig(newConfig);
-    newConfig.saveToFile(CONFIGURATION_PATH);
-    emit configurationChanged();
-    qInfo() << "Saving configuration with" << newConfig.applicationCount() << "applications";
-}
-
-void Service::onSyncTimerTimeout()
-{
-    fetchConfiguration();
-}
-
-void Service::fetchConfiguration()
-{
-    if (m_syncing || !m_remoteApi.enabled() || !m_remoteApi.connected()) {
-        if (startupCheckInProgress()) {
-            completeStartupCheck();
-        }
+    qInfo() << "Received configuration JSON:" << QString::fromUtf8(QJsonDocument(configJson).toJson(QJsonDocument::Compact));
+    if (configJson.isEmpty()) {
+        qWarning() << "Received empty configuration JSON";
         return;
     }
 
-    setSyncing(true);
+    // Validate if it looks like a config
+    if (!configJson.contains("system-configuration")){
+        qWarning() << "Received invalid configuration JSON";
+        return;
+    }
+    setSyncing(true); // Indicate we are processing a new config
 
-    DeviceConfiguration request;
-    request.deviceId = m_remoteApi.deviceId();
+    DeviceConfiguration config = DeviceConfiguration::fromJson(configJson);
+    updateCurrentConfig(config);
+    //config.saveToFile(CONFIGURATION_PATH); // Cache locally
+    setConfigVersion(config.version);
+    if (!startupCheckInProgress()) {
+        emit configurationChanged();
+    }
 
-    m_remoteApi.fetchObject(request,
-                            [this](bool success, DeviceConfiguration config, QString error) {
-                                setSyncing(false);
+    m_lastSyncTime = QDateTime::currentDateTime();
+    emit lastSyncTimeChanged();
 
-                                if (!success) {
-                                    qWarning() << "Failed to fetch configuration:" << error;
-                                    if (startupCheckInProgress()) {
-                                        completeStartupCheck();
-                                    }
-                                    return;
-                                }
-
-                                if (config.version != m_configVersion) {
-                                    qInfo() << "Configuration version changed from"
-                                            << m_configVersion << "to" << config.version;
-
-                                    updateCurrentConfig(config);
-                                    config.saveToFile(CONFIGURATION_PATH);
-                                    setConfigVersion(config.version);
-                                    if (!startupCheckInProgress()) {
-                                        emit configurationChanged();
-                                    }
-                                }
-
-                                m_lastSyncTime = QDateTime::currentDateTime();
-                                emit lastSyncTimeChanged();
-
-                                if (startupCheckInProgress()) {
-                                    completeStartupCheck();
-                                }
-                            });
+    if (startupCheckInProgress()) {
+         completeStartupCheck();
+    }
+    setSyncing(false);
 }
 
 void Service::performStartupCheck()
 {
-    if (startupCheckInProgress()) {
-        return;
-    }
+    if (startupCheckInProgress()) return;
 
+    setSyncing(true); // Indicate we are trying to sync
     setStartupCheckInProgress(true);
 
-    if (!m_remoteApi.enabled()) {
-        qInfo() << "Remote API disabled, using local configuration";
-        completeStartupCheck();
-        return;
-    }
-
+    m_startupTimeoutTimer.setSingleShot(true);
+    m_startupTimeoutTimer.setInterval(STARTUP_CHECK_TIMEOUT_MS);
+    connect(&m_startupTimeoutTimer, &QTimer::timeout, this, [this]() {
+        if (m_startupCheckInProgress) {
+            qWarning() << "Startup check timed out after" << STARTUP_CHECK_TIMEOUT_MS << "ms, using local configuration";
+            completeStartupCheck();
+        }
+    });
     m_startupTimeoutTimer.start();
 
-    if (m_remoteApi.connected()) {
-        fetchConfiguration();
+    // If already connected, request config immediately
+    if (m_webSocket.connected()) {
+        m_webSocket.request(Services::WebSocket::Method::GetConfig, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+            if (!success) {
+                qWarning() << "Failed to get config:" << error;
+                return;
+            }
+
+            onConfigurationReceived(result);
+        });
         return;
     }
 
-    qInfo() << "Waiting for remote API connection (max" << STARTUP_CHECK_TIMEOUT_MS << "ms)...";
-    m_startupConnectionWatcher = connect(&m_remoteApi,
-                                         &Services::RemoteApi::Service::connectedChanged,
+    qInfo() << "Waiting for WebSocket connection (max" << STARTUP_CHECK_TIMEOUT_MS << "ms)...";
+    
+    m_startupConnectionWatcher = connect(&m_webSocket,
+                                         &Services::WebSocket::Service::connectedChanged,
                                          this,
                                          [this]() {
-                                             if (m_remoteApi.connected() && startupCheckInProgress()) {
+                                             if (m_webSocket.connected() && startupCheckInProgress()) {
                                                  disconnect(m_startupConnectionWatcher);
-                                                 fetchConfiguration();
+                                                 m_webSocket.request(Services::WebSocket::Method::GetConfig, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+                                                     if (success) {
+                                                         onConfigurationReceived(result);
+                                                     } else {
+                                                        qWarning() << "Failed to get config:" << error;
+                                                     }
+                                                 });
                                              }
                                          });
 }
@@ -183,16 +142,15 @@ void Service::completeStartupCheck()
     m_startupTimeoutTimer.stop();
     disconnect(m_startupConnectionWatcher);
     setStartupCheckInProgress(false);
+    setSyncing(false);
 
     if (!m_currentConfig || !m_currentConfig->isValid()) {
-        loadLocalConfiguration();
+        //loadLocalConfiguration();
+        qInfo() << "No valid configuration loaded during startup check";
     }
 
-    // Notify that configuration is available (even if unchanged, apps need to load)
     emit configurationChanged();
-
-    m_syncTimer.start(SYNC_INTERVAL_MS);
-    qInfo() << "Startup check complete. Periodic sync every" << (SYNC_INTERVAL_MS / 1000) << "seconds";
+    qInfo() << "Startup check complete. Waiting for push updates.";
 }
 
 void Service::loadLocalConfiguration()

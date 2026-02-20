@@ -1,18 +1,20 @@
-#ifndef DEVICECONFIGURATION_H
-#define DEVICECONFIGURATION_H
+#ifndef SERVICES_CONFIGURATION_DEVICECONFIGURATION_H
+#define SERVICES_CONFIGURATION_DEVICECONFIGURATION_H
 
-#include "SerializableObject.h"
 #include <QDateTime>
 #include <QJsonObject>
 #include <QList>
 #include <QString>
+
+namespace Services::Configuration
+{
 
 /**
  * Device Configuration domain object
  * Represents the complete configuration for the device including all applications
  * Stores configurations as JSON objects that map to Common::Configuration hierarchy
  */
-class DeviceConfiguration : public SerializableObject
+class DeviceConfiguration
 {
   public:
     DeviceConfiguration();
@@ -20,29 +22,20 @@ class DeviceConfiguration : public SerializableObject
     // Metadata
     QString version;
     QDateTime lastModified;
+    QString deviceId; 
     QString activeAppId;
 
     // System-wide configuration (pendulum colors, brightness, volume, etc.)
     QJsonObject systemConfiguration;
 
     // Applications list - stored as JSON (from Common::Configuration::toJson())
+    // Each object must have an "id" and "type" field
     QList<QJsonObject> applications;
 
-    // SerializableObject interface
-    QJsonObject toJson() const override;
-    bool isValid() const override;
-    QString typeName() const override
-    {
-        return "DeviceConfiguration";
-    }
-
-    // Endpoint routing
-    QString getEndpoint() const override;
-    QString getFetchEndpoint() const override;
-    QString getUpdateEndpoint() const override;
-
-    // Deserialization
+    // Serialization
+    QJsonObject toJson() const;
     static DeviceConfiguration fromJson(const QJsonObject& json);
+    bool isValid() const;
 
     // Local persistence (configuration.json file)
     void saveToFile(const QString& directory) const;
@@ -61,4 +54,6 @@ class DeviceConfiguration : public SerializableObject
     void sortApplicationsByOrder();
 };
 
-#endif // DEVICECONFIGURATION_H
+} // namespace Services::Configuration
+
+#endif // SERVICES_CONFIGURATION_DEVICECONFIGURATION_H

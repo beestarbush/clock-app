@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 
     QGuiApplication app(argc, argv);
     app.setOrganizationName("bee");
-    app.setApplicationName("clockapp");
+    app.setApplicationName("clock-app");
 
     QQmlApplicationEngine engine;
     QElapsedTimer lTimer;

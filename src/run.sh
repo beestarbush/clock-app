@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd build
-./clockapp -platform xcb
+./clock-app -platform xcb

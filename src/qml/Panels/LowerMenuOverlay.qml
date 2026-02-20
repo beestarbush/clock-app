@@ -87,7 +87,7 @@ PanelContainer {
                     versionValue.text = Backend.Services.version.tag
                     showVersion = false
                 } else {
-                    versionValue.text = Backend.Services.remoteApi.deviceId
+                    versionValue.text = Backend.Applications.setup.deviceId
                     showVersion = true
                 }
             }

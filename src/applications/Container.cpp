@@ -1,6 +1,6 @@
 #include "Container.h"
 #include "services/Container.h"
-#include "services/remoteapi/DeviceConfiguration.h"
+#include "services/configuration/DeviceConfiguration.h"
 #include <QDebug>
 
 using namespace Applications;
@@ -8,7 +8,7 @@ using namespace Applications;
 Container::Container(Services::Container& services, QObject* parent)
     : QObject(parent),
       m_applications(),
-      m_setup(new Setup::Application(m_applications, *services.m_remoteApi, *services.m_configuration, this)),
+      m_setup(new Setup::Application(m_applications, *services.m_configuration, this)),
       m_debug(new Debug::Application(this)),
       m_menu(new Menu::Application(this)),
       m_watchface(new Watchface::Application(m_applications, this))
@@ -19,7 +19,8 @@ Container::Container(Services::Container& services, QObject* parent)
     });
 
     // When startup check is already completed, reload immediately to apply initial configuration (if any present).
-    if (!services.m_configuration->startupCheckInProgress()) {
+    if (!services.m_configuration->startupCheckInProgress() &&
+        !services.m_media->startupCheckInProgress()) {
         reload(*services.m_configuration, *services.m_media);
     }
 
@@ -44,7 +45,7 @@ void Container::reload(Services::Configuration::Service& configuration, Services
 {
     setReloading(true);
 
-    DeviceConfiguration* config = configuration.getCurrentConfiguration();
+    Services::Configuration::DeviceConfiguration* config = configuration.getCurrentConfiguration();
     if (!config || !config->isValid() || !config->hasApplications()) {
         qWarning() << "Invalid configuration retrieved.";
         setReloading(false);

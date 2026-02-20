@@ -9,8 +9,10 @@ namespace Drivers::Network
 class Driver : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString interfaceName READ interfaceName NOTIFY interfaceNameChanged)
-    Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
+    Q_PROPERTY(QString externalInterfaceName READ externalInterfaceName NOTIFY externalInterfaceNameChanged)
+    Q_PROPERTY(QString loopbackInterfaceName READ loopbackInterfaceName NOTIFY loopbackInterfaceNameChanged)
+    Q_PROPERTY(bool externalInterfaceConnected READ externalInterfaceConnected NOTIFY externalInterfaceConnectedChanged)
+    Q_PROPERTY(bool loopbackInterfaceConnected READ loopbackInterfaceConnected NOTIFY loopbackInterfaceConnectedChanged)
     Q_PROPERTY(bool running READ running NOTIFY runningChanged)
     Q_PROPERTY(QString ipAddress READ ipAddress NOTIFY ipAddressChanged)
     Q_PROPERTY(QString subnetMask READ subnetMask NOTIFY subnetMaskChanged)
@@ -18,15 +20,19 @@ class Driver : public QObject
   public:
     Driver(QObject* parent = nullptr);
 
-    QString interfaceName() const;
-    bool connected() const;
+    QString externalInterfaceName() const;
+    QString loopbackInterfaceName() const;
+    bool externalInterfaceConnected() const;
+    bool loopbackInterfaceConnected() const;
     bool running() const;
     QString ipAddress() const;
     QString subnetMask() const;
 
   signals:
-    void interfaceNameChanged();
-    void connectedChanged();
+    void externalInterfaceNameChanged();
+    void loopbackInterfaceNameChanged();
+    void externalInterfaceConnectedChanged();
+    void loopbackInterfaceConnectedChanged();
     void runningChanged();
     void ipAddressChanged();
     void subnetMaskChanged();
@@ -35,8 +41,10 @@ class Driver : public QObject
     void update();
 
     QTimer m_refreshTimer;
-    QString m_interfaceName;
-    bool m_connected;
+    QString m_externalInterfaceName;
+    QString m_loopbackInterfaceName;
+    bool m_externalInterfaceConnected;
+    bool m_loopbackInterfaceConnected;
     bool m_running;
     QString m_ipAddress;
     QString m_subnetMask;

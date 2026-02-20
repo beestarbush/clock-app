@@ -44,9 +44,6 @@ RoundPanel {
                 case Backend.SetupEnums.DeviceId:
                     panelContainer.currentIndex = panelContainer.indexOfPanel(deviceIdPanel)
                     break
-                case Backend.SetupEnums.ServerConnection:
-                    panelContainer.currentIndex = panelContainer.indexOfPanel(serverConnectionPanel)
-                    break
                 case Backend.SetupEnums.AppEnable:
                     panelContainer.currentIndex = panelContainer.indexOfPanel(appEnablePanel)
                     break
@@ -87,7 +84,6 @@ RoundPanel {
             switch(setup.currentPanel) {
                 case Backend.SetupEnums.Welcome: return indexOfPanel(welcomePanel)
                 case Backend.SetupEnums.DeviceId: return indexOfPanel(deviceIdPanel)
-                case Backend.SetupEnums.ServerConnection: return indexOfPanel(serverConnectionPanel)
                 case Backend.SetupEnums.AppEnable: return indexOfPanel(appEnablePanel)
                 case Backend.SetupEnums.AppDateTime: return indexOfPanel(appDateTimePanel)
                 case Backend.SetupEnums.AppBackground: return indexOfPanel(appBackgroundPanel)
@@ -116,27 +112,15 @@ RoundPanel {
             anchors.fill: parent
             titleText: Translation.setupPanelRegisterTitleText
             descriptionText: Translation.setupPanelRegisterDescriptionText
-            valueText: Backend.Services.remoteApi.deviceId
+            valueText: Backend.Applications.setup.deviceId
             valueTextSelected: setup && setup.dialWheel ? setup.dialWheel.visible : false
 
             onValueSelected: setup.showDialWheel(0, 10, 1, 0)
 
             onButtonClicked: {
-                Backend.Services.remoteApi.deviceId = deviceIdPanel.valueText
+                Backend.Applications.setup.deviceId = deviceIdPanel.valueText
                 setup.next()
             }
-        }
-
-        ToggleButtonPanel {
-            id: serverConnectionPanel
-
-            anchors.fill: parent
-            titleText: Translation.setupPanelServerConnectionTitleText
-            descriptionText: Translation.setupPanelServerConnectionDescriptionText
-            toggleTarget: Backend.Services.remoteApi
-            toggleProperty: "enabled"
-
-            onButtonClicked: setup.next()
         }
 
         ToggleButtonPanel {

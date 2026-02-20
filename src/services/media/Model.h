@@ -15,8 +15,11 @@ class Model : public QAbstractListModel
   public:
     enum Roles
     {
-        FilenameRole = Qt::UserRole + 1,
+        IdRole = Qt::UserRole + 1,
+        FilenameRole,
         PathRole,
+        TypeRole,
+        SizeRole,
         IsValidRole
     };
 
@@ -38,7 +41,9 @@ class Model : public QAbstractListModel
     }
 
     // Model manipulation
-    void setMedia(const QStringList& filenames, const QString& basePath);
+    void setMedia(const QList<Item*>& items);
+    void addItem(Item* item);
+    void removeItem(const QString& filename);
     void clear();
 
   signals:

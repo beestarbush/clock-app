@@ -65,7 +65,7 @@ RUN wget -q  https://download.qt.io/official_releases/qt/6.9/6.9.0/single/qt-eve
 	tar xf qt-everywhere-src-6.9.0.tar.xz && \
 	mkdir -p build && \
 	cd build && \
-	/tmp/qt-everywhere-src-6.9.0/configure -nomake tests -nomake examples -submodules qtbase,qtdeclarative -xcb-xlib -xcb -xkbcommon -no-feature-printer -no-feature-clipboard && \
+	/tmp/qt-everywhere-src-6.9.0/configure -nomake tests -nomake examples -submodules qtbase,qtdeclarative,qtwebsockets -xcb-xlib -xcb -xkbcommon -no-feature-printer -no-feature-clipboard && \
 	cmake --build . --parallel && \
 	cmake --install . && \
 	rm -rf /tmp/qt* && \

@@ -53,8 +53,6 @@ Item {
 	readonly property string setupPanelWelcomeButtonText: qsTr("Next")
 	readonly property string setupPanelRegisterTitleText: qsTr("Register clock")
 	readonly property string setupPanelRegisterDescriptionText: qsTr("Tap the value to edit it, then use the dial below to adjust the value.")
-	readonly property string setupPanelServerConnectionTitleText: qsTr("Server connection")
-	readonly property string setupPanelServerConnectionDescriptionText: qsTr("Use the toggle to turn a connection with server on or off. This connection can be used to synchronize status of the clock, and add/remove media from the clock.")
 	readonly property string setupPanelAppEnableDescriptionText: qsTr("Use the toggle to turn this application on or off.")
 	readonly property string setupPanelAppDateTimePickerTitleText: qsTr("Configure %1")
 	readonly property string setupPanelAppDateTimePickerDescriptionText: qsTr("Tap a part of the date or time to edit it, then use the dial below to adjust the value.")
