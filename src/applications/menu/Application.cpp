@@ -4,17 +4,14 @@ using namespace Applications::Menu;
 Application::Application(QObject* parent)
     : QObject(parent),
       m_main(this),
-      m_settings(this),
       m_dialog(None),
       m_dialogParam(-1),
       m_mainItems{
           Item("Menu", "qrc:/Icons/home.svg", this),
-          Item("Settings", "qrc:/Icons/settings.svg", this),
-          Item("Notifications", "qrc:/Icons/notifications.svg", this),
-          Item("Version", "qrc:/Icons/version.svg", this)},
-      m_settingsItems{
           Item("Display brightness", "qrc:/Icons/brightness.svg", this),
-          Item("Setup wizard", "qrc:/Icons/wizard.svg", this)}
+          Item("Customize", "qrc:/Icons/customize.svg", this),
+          Item("Notifications", "qrc:/Icons/notifications.svg", this),
+          Item("Version", "qrc:/Icons/version.svg", this)}
 {
     buildMenus();
 }
@@ -22,11 +19,6 @@ Application::Application(QObject* parent)
 Model* Application::main()
 {
     return &m_main;
-}
-
-Model* Application::settings()
-{
-    return &m_settings;
 }
 
 Application::DialogType Application::dialog() const
@@ -45,8 +37,8 @@ void Application::buildMenus()
     m_mainItems[MainMenu].setAction([this]() {
         closeDialog();
     });
-    m_mainItems[MainSettings].setAction([this]() {
-        // Settings is a submenu - no direct action
+    m_mainItems[MainBrightness].setAction([this]() {
+        showDialog(ScreenBrightness);
     });
     m_mainItems[MainNotifications].setAction([this]() {
         showDialog(Notifications);
@@ -54,20 +46,12 @@ void Application::buildMenus()
     m_mainItems[MainVersion].setAction([this]() {
         showDialog(Version);
     });
+    m_mainItems[MainCustomize].setAction([this]() {
+        showDialog(Customize);
+    });
 
     for (auto& item : m_mainItems)
         m_main.add(item);
-
-    // Build settings submenu using enum indices
-    m_settingsItems[SettingsBrightness].setAction([this]() {
-        showDialog(ScreenBrightness);
-    });
-    m_settingsItems[SettingsWizard].setAction([this]() {
-        showDialog(SetupWizard);
-    });
-
-    for (auto& item : m_settingsItems)
-        m_settings.add(item);
 }
 
 void Application::showDialog(DialogType type, int param)

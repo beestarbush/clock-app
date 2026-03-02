@@ -4,7 +4,6 @@
 #include "screen/Driver.h"
 #include "storage/Driver.h"
 #include "system/Driver.h"
-#include "temperature/Driver.h"
 
 namespace Services
 {
@@ -19,7 +18,6 @@ class Container : public QObject
     Q_PROPERTY(Network::Driver* network MEMBER m_network CONSTANT)
     Q_PROPERTY(Screen::Driver* screen MEMBER m_screen CONSTANT)
     Q_PROPERTY(System::Driver* system MEMBER m_system CONSTANT)
-    Q_PROPERTY(Temperature::Driver* temperature MEMBER m_temperature CONSTANT)
     Q_PROPERTY(Storage::Driver* storage MEMBER m_storage CONSTANT)
 
   public:
@@ -32,6 +30,5 @@ class Container : public QObject
     Network::Driver* m_network;
     Screen::Driver* m_screen;
     System::Driver* m_system;
-    Temperature::Driver* m_temperature;
 };
 } // namespace Drivers

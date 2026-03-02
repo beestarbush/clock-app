@@ -86,10 +86,10 @@ Item {
 	// Loading panel
 	readonly property string loadingPanelLabelText: qsTr("Recalibrating the clockwork...")
 
+	// Customize dialog
+	readonly property string customizeDialogScanQrCodeText: qsTr("Scan to customize clock")
+	readonly property string customizeDialogNoNetworkText: qsTr("Connect to a network to customize the clock.")
+
 	// Watchfaces panel
 	readonly property string watchfacesPanelNotSetup: qsTr("System not configured")
-
-
-	// Menu overlay
-	readonly property string lowerMenuOverlaySetupWizardButton: qsTr("Press and hold to enter setup wizard.")
 }

@@ -12,6 +12,7 @@ qt_add_resources(ResourcesLib "icons"
 	FILES
 		Icons/home.svg
 		Icons/settings.svg
+		Icons/customize.svg
 		Icons/notifications.svg
 		Icons/version.svg
 		Icons/brightness.svg

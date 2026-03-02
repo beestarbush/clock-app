@@ -5,6 +5,8 @@ project(clock-app VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick Network WebSockets)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(QRENCODE REQUIRED libqrencode)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -21,12 +23,12 @@ qt_add_executable(clock-app
     drivers/storage/Driver.h
     drivers/system/Driver.cpp
     drivers/system/Driver.h
-    drivers/temperature/Driver.cpp
-    drivers/temperature/Driver.h
     qmlcomponents/QmlUtils.cpp
     qmlcomponents/QmlUtils.h
     qmlcomponents/RoundAnimatedImage.cpp
     qmlcomponents/RoundAnimatedImage.h
+    qmlcomponents/QrCodeImage.cpp
+    qmlcomponents/QrCodeImage.h
     services/datetime/Service.cpp
     services/datetime/Service.h
     services/media/Item.cpp
@@ -91,7 +93,7 @@ qt_add_executable(clock-app
     applications/watchface/Application.h
 )
 
-target_include_directories(clock-app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(clock-app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${QRENCODE_INCLUDE_DIRS})
 
 # This only contains default media (when lookup on filesystem is not possible)
 qt_add_resources(clock-app "media"
@@ -122,7 +124,7 @@ set_target_properties(clock-app PROPERTIES
 )
 
 target_link_libraries(clock-app
-    PRIVATE Qt6::Quick Qt6::Network Qt6::WebSockets MainLibplugin ComponentLibplugin PanelLibplugin ResourcesLibplugin
+    PRIVATE Qt6::Quick Qt6::Network Qt6::WebSockets MainLibplugin ComponentLibplugin PanelLibplugin ResourcesLibplugin ${QRENCODE_LIBRARIES}
 )
 
 include(GNUInstallDirs)

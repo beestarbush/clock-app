@@ -9,6 +9,7 @@
 #include "drivers/Container.h"
 #include "qmlcomponents/QmlUtils.h"
 #include "qmlcomponents/RoundAnimatedImage.h"
+#include "qmlcomponents/QrCodeImage.h"
 #include "services/Container.h"
 
 int main(int argc, char* argv[])
@@ -36,6 +37,7 @@ int main(int argc, char* argv[])
     qmlInterface->registerObject("Services", &services);
     qmlInterface->registerObject("Applications", &applications);
     qmlInterface->registerType<RoundAnimatedImage>("RoundAnimatedImage");
+    qmlInterface->registerType<QrCodeImage>("QrCodeImage");
     qmlInterface->registerType<QmlUtils>("QmlUtils");
     qmlInterface->registerUncreatableType<Applications::Menu::Application>("MenuEnums");
     qmlInterface->registerUncreatableType<Applications::Setup::Application>("SetupEnums");

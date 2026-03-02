@@ -31,6 +31,7 @@ enum class Topic
     Configuration,
     Media,
     ApplicationStatus,
+    Temperature,
     Unknown
 };
 Q_ENUM_NS(Topic)
@@ -93,6 +94,9 @@ inline Topic topicFromString(const QString& topicStr)
     else if (topicStr == "application-status") {
         return Topic::ApplicationStatus;
     }
+    else if (topicStr == "temperature") {
+        return Topic::Temperature;
+    }
     else {
         return Topic::Unknown;
     }
@@ -107,6 +111,8 @@ inline QString topicToString(Topic topic)
         return "media";
     case Topic::ApplicationStatus:
         return "application-status";
+    case Topic::Temperature:
+        return "temperature";
     default:
         return "unknown";
     }

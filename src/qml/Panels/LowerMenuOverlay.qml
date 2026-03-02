@@ -27,10 +27,10 @@ PanelContainer {
         // Otherwise show menu dialogs
         switch(menu ? menu.dialog : 0) {
             case Backend.MenuEnums.Version: return indexOfPanel(versionDialog)
-            case Backend.MenuEnums.SetupWizard: return indexOfPanel(setupWizardDialog)
             case Backend.MenuEnums.ScreenBrightness: return indexOfPanel(screenBrightnessDialog)
             case Backend.MenuEnums.Notifications: return indexOfPanel(notificationDialog)
             case Backend.MenuEnums.DialWheel: return indexOfPanel(dialWheelDialog)
+            case Backend.MenuEnums.Customize: return indexOfPanel(customizeDialog)
             default: return indexOfPanel(emptyDialog)
         }
     }
@@ -92,41 +92,6 @@ PanelContainer {
                 }
             }
         }
-    }
-
-    MenuDialog {
-        id: setupWizardDialog
-        anchors.fill: parent
-
-        MouseArea {
-            anchors.fill: parent
-            onPressed: setupWizardLongPressTimer.start()
-            onReleased: setupWizardLongPressTimer.stop()
-            onCanceled: setupWizardLongPressTimer.stop()
-        }
-
-        Timer {
-            id: setupWizardLongPressTimer
-            interval: 2000
-            running: false
-            repeat: false
-            onTriggered: {
-                Backend.Applications.setup.reset()
-                menu.closeDialog()
-            }
-        }
-
-        Text {
-            id: setupWizardTextValue
-            width: parent.width - Value.defaultMargin
-            font.pixelSize: Value.defaultTextSize
-            anchors.centerIn: parent
-            wrapMode: Text.Wrap
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            text: Translation.lowerMenuOverlaySetupWizardButton
-            color: Color.lightGray
-        }     
     }
 
     MenuDialog {
@@ -283,6 +248,51 @@ PanelContainer {
                     menu.dialWheelValueChanged(dialWheel.value)
                 }
             }
+        }
+    }
+
+    MenuDialog {
+        id: customizeDialog
+        anchors.fill: parent
+        anchors.centerIn: parent
+
+        property bool networkAvailable: Backend.Drivers.network.ipAddress !== ""
+
+        Text {
+            id: settingsLabel
+            visible: customizeDialog.networkAvailable
+            anchors.bottom: qrCode.top
+            anchors.bottomMargin: Value.defaultMargin
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: Translation.customizeDialogScanQrCodeText
+            font.pixelSize: Value.smallTextSize
+            font.bold: true
+            color: Color.lightGray
+            horizontalAlignment: Text.AlignHCenter
+        }
+
+        Backend.QrCodeImage {
+            id: qrCode
+            visible: customizeDialog.networkAvailable
+            anchors.centerIn: parent
+            anchors.verticalCenterOffset: Value.defaultMargin
+            width: Math.min(parent.width, parent.height) * 0.3
+            height: width
+            text: "http://" + Backend.Drivers.network.ipAddress + ":5173"
+            backgroundColor: Color.lightGray
+        }
+
+        Text {
+            visible: !customizeDialog.networkAvailable
+            anchors.centerIn: parent
+            width: parent.width - Value.defaultMargin
+            text: Translation.customizeDialogNoNetworkText
+            font.pixelSize: Value.smallTextSize
+            font.bold: true
+            color: Color.lightGray
+            wrapMode: Text.Wrap
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
         }
     }
 }

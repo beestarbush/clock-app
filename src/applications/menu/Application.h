@@ -14,7 +14,6 @@ class Application : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(Menu::Model* main READ main CONSTANT)
-    Q_PROPERTY(Menu::Model* settings READ settings CONSTANT)
     Q_PROPERTY(DialogType dialog READ dialog NOTIFY dialogChanged)
     Q_PROPERTY(int dialogParam READ dialogParam NOTIFY dialogParamChanged)
 
@@ -23,29 +22,21 @@ class Application : public QObject
     enum MainMenuItem
     {
         MainMenu = 0,
-        MainSettings = 1,
-        MainNotifications = 2,
-        MainVersion = 3,
-        MainMenuCount = 4
+        MainBrightness = 1,
+        MainCustomize = 2,
+        MainNotifications = 3,
+        MainVersion = 4,
+        MainMenuCount = 5
     };
     Q_ENUM(MainMenuItem)
-
-    // Settings menu items
-    enum SettingsMenuItem
-    {
-        SettingsBrightness = 0,
-        SettingsWizard = 1,
-        SettingsMenuCount = 2
-    };
-    Q_ENUM(SettingsMenuItem)
 
     // Dialog types
     enum DialogType
     {
         None,
         Version,
-        SetupWizard,
         ScreenBrightness,
+        Customize,
         Notifications,
         DialWheel
     };
@@ -54,7 +45,6 @@ class Application : public QObject
     Application(QObject* parent = nullptr);
 
     Menu::Model* main();
-    Menu::Model* settings();
 
     DialogType dialog() const;
     int dialogParam() const;
@@ -71,14 +61,12 @@ class Application : public QObject
     void buildMenus();
 
     Menu::Model m_main;
-    Menu::Model m_settings;
 
     DialogType m_dialog;
     int m_dialogParam;
 
     // Store menu items to manage lifetime - sized using enum counts
     Menu::Item m_mainItems[MainMenuCount];
-    Menu::Item m_settingsItems[SettingsMenuCount];
 };
 } // namespace Applications::Menu
 

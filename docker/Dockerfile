@@ -34,6 +34,7 @@ RUN apt-get update && apt-get install -y \
 	libglu1-mesa-dev \
 	libfreetype6 \
 	libssl-dev \
+	libqrencode-dev \
 	ca-certificates \
 	python3 \
 	'^libxcb.*-dev' \
