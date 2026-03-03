@@ -1,16 +1,9 @@
 #include "Application.h"
-#include "applications/clock/Application.h"
-#include "applications/countdown/Application.h"
-#include "applications/datedisplay/Application.h"
-#include "applications/photoframe/Application.h"
-#include "applications/timeelapsed/Application.h"
 
 #include <QDebug>
 #include <algorithm>
 
-namespace Applications
-{
-namespace Watchface
+namespace Applications::Watchface
 {
 Application::Application(const Common::DynamicApplicationMap& applications, QObject* parent)
     : QObject(parent),
@@ -89,67 +82,13 @@ void Application::updateEnabledWatchfaces()
 
     for (auto it = m_applications.constBegin(); it != m_applications.constEnd(); ++it) {
         Common::Application* app = it.value();
-        if (!app)
-            continue;
-        if (app->configuration() && !app->configuration()->enabled())
-            continue;
-
-        switch (app->type()) {
-        case Common::Type::Clock: {
-            auto* castedApp = dynamic_cast<Applications::Clock::Application*>(app);
-            if (!castedApp) {
-                qDebug() << "Watchface: Failed to cast application" << it.key() << "to Clock::Application";
-                continue;
-            }
-
-            m_enabledWatchfaces.append(castedApp);
-        } break;
-
-        case Common::Type::TimeElapsed: {
-            auto* castedApp = dynamic_cast<Applications::TimeElapsed::Application*>(app);
-            if (!castedApp) {
-                qDebug() << "Watchface: Failed to cast application" << it.key() << "to TimeElapsed::Application";
-                continue;
-            }
-
-            m_enabledWatchfaces.append(castedApp);
-        } break;
-
-        case Common::Type::Countdown: {
-            auto* castedApp = dynamic_cast<Applications::Countdown::Application*>(app);
-            if (!castedApp) {
-                qDebug() << "Watchface: Failed to cast application" << it.key() << "to Countdown::Application";
-                continue;
-            }
-
-            m_enabledWatchfaces.append(castedApp);
-        } break;
-
-        case Common::Type::PhotoFrame: {
-            auto* castedApp = dynamic_cast<Applications::PhotoFrame::Application*>(app);
-            if (!castedApp) {
-                qDebug() << "Watchface: Failed to cast application" << it.key() << "to PhotoFrame::Application";
-                continue;
-            }
-
-            m_enabledWatchfaces.append(castedApp);
-        } break;
-
-        case Common::Type::DateDisplay: {
-            auto* castedApp = dynamic_cast<Applications::DateDisplay::Application*>(app);
-            if (!castedApp) {
-                qDebug() << "Watchface: Failed to cast application" << it.key() << "to DateDisplay::Application";
-                continue;
-            }
-
-            m_enabledWatchfaces.append(castedApp);
-        } break;
-
-        case Common::Type::Unknown:
-        default:
-            qDebug() << "Watchface: Application" << it.key() << "is not of any type, skipping";
+        if (!app || app->type() == Common::Type::Unknown) {
             continue;
         }
+        if (app->configuration() && !app->configuration()->enabled()) {
+            continue;
+        }
+        m_enabledWatchfaces.append(app);
     }
 
     m_currentIndex = 0;
@@ -175,5 +114,5 @@ void Application::startTimerForCurrentApp()
     m_rotationTimer->start(durationSeconds * 1000);
 }
 
-} // namespace Watchface
-} // namespace Applications
+} // namespace Applications::Watchface
+

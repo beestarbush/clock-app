@@ -13,7 +13,7 @@ class TimerConfiguration : public Common::Configuration
     Q_PROPERTY(quint64 timestamp READ timestamp WRITE setTimestamp NOTIFY timestampChanged)
 
   public:
-    TimerConfiguration(QString name, QObject* parent = nullptr);
+    TimerConfiguration(const QString& name, QObject* parent = nullptr);
 
     QJsonObject toJson() const override;
     void fromJson(const QJsonObject& json) override;

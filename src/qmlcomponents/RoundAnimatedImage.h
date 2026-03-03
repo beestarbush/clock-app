@@ -1,3 +1,6 @@
+#ifndef QMLCOMPONENTS_ROUNDANIMATEDIMAGE_H
+#define QMLCOMPONENTS_ROUNDANIMATEDIMAGE_H
+
 #include <QMovie>
 #include <QPainter>
 #include <QQuickPaintedItem>
@@ -27,3 +30,5 @@ class RoundAnimatedImage : public QQuickPaintedItem
     QMovie* m_movie;
     QString m_source;
 };
+
+#endif // QMLCOMPONENTS_ROUNDANIMATEDIMAGE_H

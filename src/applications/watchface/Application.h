@@ -1,14 +1,13 @@
-#pragma once
+#ifndef APPS_WATCHFACE_APPLICATION_H
+#define APPS_WATCHFACE_APPLICATION_H
 
 #include <QObject>
 #include <QTimer>
 
-#include "../common/Application.h"
-#include "../common/Types.h"
+#include "applications/common/Application.h"
+#include "applications/common/Types.h"
 
-namespace Applications
-{
-namespace Watchface
+namespace Applications::Watchface
 {
 class Application : public QObject
 {
@@ -39,5 +38,6 @@ class Application : public QObject
     int m_currentIndex;
     QTimer* m_rotationTimer;
 };
-} // namespace Watchface
-} // namespace Applications
+} // namespace Applications::Watchface
+
+#endif // APPS_WATCHFACE_APPLICATION_H
