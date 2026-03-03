@@ -9,6 +9,7 @@ qt_add_qml_module(PanelLib
     QML_FILES
         ClockPanel.qml
         CountdownPanel.qml
+        DateDisplayPanel.qml
         DebugPanel.qml
         Debug/GalleryPanel.qml
         Debug/InspectorPanel.qml
@@ -19,6 +20,7 @@ qt_add_qml_module(PanelLib
         LowerMainPanel.qml
         LowerMenuOverlay.qml
         PendulumPanel.qml
+        PhotoFramePanel.qml
         RoundProgressBarPanel.qml
         SetupPanel.qml
         Setup/DateTimePickerPanel.qml

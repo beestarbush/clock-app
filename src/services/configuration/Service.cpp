@@ -8,7 +8,7 @@
 using namespace Services::Configuration;
 
 #ifdef PLATFORM_IS_TARGET
-const QString CONFIGURATION_PATH = QStringLiteral("/usr/share/bee/configuration");
+const QString CONFIGURATION_PATH = QStringLiteral(".");
 #else
 const QString CONFIGURATION_PATH = QStringLiteral("/workdir/build/bee/configuration");
 #endif

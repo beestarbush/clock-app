@@ -3,7 +3,7 @@
 using namespace Drivers::Storage;
 
 #ifdef PLATFORM_IS_TARGET
-const QString SETTINGS_PATH = QStringLiteral("/usr/share/");
+const QString SETTINGS_PATH = QStringLiteral(".");
 #else
 const QString SETTINGS_PATH = QStringLiteral("/workdir/build");
 #endif

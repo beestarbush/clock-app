@@ -1,6 +1,8 @@
 #include "Application.h"
 #include "applications/clock/Application.h"
 #include "applications/countdown/Application.h"
+#include "applications/datedisplay/Application.h"
+#include "applications/photoframe/Application.h"
 #include "applications/timeelapsed/Application.h"
 
 #include <QDebug>
@@ -18,12 +20,12 @@ Application::Application(const Common::DynamicApplicationMap& applications, QObj
 {
     updateEnabledWatchfaces();
 
-    // Setup rotation timer (10 seconds)
-    m_rotationTimer->setInterval(10000);
+    // Setup rotation timer (uses per-app duration)
+    m_rotationTimer->setSingleShot(true);
     connect(m_rotationTimer, &QTimer::timeout, this, &Application::rotateToNext);
 
     if (!m_enabledWatchfaces.isEmpty()) {
-        m_rotationTimer->start();
+        startTimerForCurrentApp();
         qDebug() << "Watchface::Application initialized with" << m_enabledWatchfaces.size() << "enabled watchfaces";
     }
     else {
@@ -44,7 +46,7 @@ void Application::refresh()
     updateEnabledWatchfaces();
 
     if (!m_enabledWatchfaces.isEmpty()) {
-        m_rotationTimer->start();
+        startTimerForCurrentApp();
         qDebug() << "Watchface::Application refreshed with" << m_enabledWatchfaces.size() << "enabled watchfaces";
     }
     else {
@@ -64,8 +66,8 @@ void Application::nextWatchface()
     m_currentIndex = (m_currentIndex + 1) % m_enabledWatchfaces.size();
     emit currentAppChanged();
 
-    // Restart timer
-    m_rotationTimer->start();
+    // Restart timer with new app's duration
+    startTimerForCurrentApp();
 }
 
 void Application::previousWatchface()
@@ -77,8 +79,8 @@ void Application::previousWatchface()
     m_currentIndex = (m_currentIndex - 1 + m_enabledWatchfaces.size()) % m_enabledWatchfaces.size();
     emit currentAppChanged();
 
-    // Restart timer
-    m_rotationTimer->start();
+    // Restart timer with new app's duration
+    startTimerForCurrentApp();
 }
 
 void Application::updateEnabledWatchfaces()
@@ -123,6 +125,26 @@ void Application::updateEnabledWatchfaces()
             m_enabledWatchfaces.append(castedApp);
         } break;
 
+        case Common::Type::PhotoFrame: {
+            auto* castedApp = dynamic_cast<Applications::PhotoFrame::Application*>(app);
+            if (!castedApp) {
+                qDebug() << "Watchface: Failed to cast application" << it.key() << "to PhotoFrame::Application";
+                continue;
+            }
+
+            m_enabledWatchfaces.append(castedApp);
+        } break;
+
+        case Common::Type::DateDisplay: {
+            auto* castedApp = dynamic_cast<Applications::DateDisplay::Application*>(app);
+            if (!castedApp) {
+                qDebug() << "Watchface: Failed to cast application" << it.key() << "to DateDisplay::Application";
+                continue;
+            }
+
+            m_enabledWatchfaces.append(castedApp);
+        } break;
+
         case Common::Type::Unknown:
         default:
             qDebug() << "Watchface: Application" << it.key() << "is not of any type, skipping";
@@ -141,6 +163,16 @@ void Application::updateEnabledWatchfaces()
 void Application::rotateToNext()
 {
     nextWatchface();
+}
+
+void Application::startTimerForCurrentApp()
+{
+    auto* app = currentApp();
+    int durationSeconds = 10; // fallback default
+    if (app && app->configuration()) {
+        durationSeconds = qBound(3, app->configuration()->duration(), 60);
+    }
+    m_rotationTimer->start(durationSeconds * 1000);
 }
 
 } // namespace Watchface

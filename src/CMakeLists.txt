@@ -89,6 +89,10 @@ qt_add_executable(clock-app
     applications/menu/Model.h
     applications/setup/Application.cpp
     applications/setup/Application.h
+    applications/photoframe/Application.cpp
+    applications/photoframe/Application.h
+    applications/datedisplay/Application.cpp
+    applications/datedisplay/Application.h
     applications/watchface/Application.cpp
     applications/watchface/Application.h
 )

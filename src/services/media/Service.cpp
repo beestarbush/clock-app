@@ -11,7 +11,7 @@
 using namespace Services::Media;
 
 #ifdef PLATFORM_IS_TARGET
-const QString MEDIA_PATH = QStringLiteral("/usr/share/bee/media");
+const QString MEDIA_PATH = QStringLiteral("./media");
 #else
 const QString MEDIA_PATH = QStringLiteral("/workdir/build/bee/media");
 #endif

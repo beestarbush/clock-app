@@ -17,6 +17,7 @@ class Configuration : public QObject
     Q_PROPERTY(QString background READ background WRITE setBackground NOTIFY backgroundChanged)
     Q_PROPERTY(QColor baseColor READ baseColor WRITE setBaseColor NOTIFY baseColorChanged)
     Q_PROPERTY(QColor accentColor READ accentColor WRITE setAccentColor NOTIFY accentColorChanged)
+    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
 
   public:
     Configuration(const QString& name, QObject* parent = nullptr);
@@ -39,6 +40,9 @@ class Configuration : public QObject
     QColor accentColor() const;
     void setAccentColor(const QColor& accentColor);
 
+    int duration() const;
+    void setDuration(int duration);
+
     Configuration& operator=(const Configuration& other);
     friend QDebug operator<<(QDebug debug, const Configuration& config);
 
@@ -48,6 +52,7 @@ class Configuration : public QObject
     void backgroundChanged();
     void baseColorChanged();
     void accentColorChanged();
+    void durationChanged();
 
   protected:
     QString m_name;
@@ -58,6 +63,7 @@ class Configuration : public QObject
     QString m_background;
     QColor m_baseColor;
     QColor m_accentColor;
+    int m_duration;
 };
 } // namespace Common
 
