@@ -28,6 +28,10 @@ Panel {
                 return 3
             if (currentApp.watchface === Backend.Common.Watchface.CountdownTimer)
                 return 4
+            if (currentApp.watchface === Backend.Common.Watchface.PhotoFrame)
+                return 5
+            if (currentApp.watchface === Backend.Common.Watchface.DateDisplay)
+                return 6
             return 0
         }
 
@@ -120,6 +124,26 @@ Panel {
             hours: (currentApp && currentApp.hours) || 0
             minutes: (currentApp && currentApp.minutes) || 0
             seconds: (currentApp && currentApp.seconds) || 0
+            onClicked: watchfacesPanel.clicked()
+        }
+
+        // Photo Frame Panel
+        PhotoFramePanel {
+            id: photoFramePanel
+
+            backgroundSource: (currentAppValid && Backend.Services.media.getMediaPath(currentApp.configuration.background)) || ""
+            backgroundOpacity: (currentAppValid && currentApp.configuration.backgroundOpacity) || 0
+            onClicked: watchfacesPanel.clicked()
+        }
+
+        // Date Display Panel
+        DateDisplayPanel {
+            id: dateDisplayPanel
+
+            backgroundSource: (currentAppValid && Backend.Services.media.getMediaPath(currentApp.configuration.background)) || ""
+            backgroundOpacity: (currentAppValid && currentApp.configuration.backgroundOpacity) || 0
+            textColor: (currentAppValid && currentApp.configuration.accentColor) || "white"
+            currentDate: (currentAppValid && currentApp.currentDate) || ""
             onClicked: watchfacesPanel.clicked()
         }
     }

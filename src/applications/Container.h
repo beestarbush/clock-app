@@ -5,8 +5,10 @@
 #include "common/Application.h"
 #include "common/Types.h"
 #include "countdown/Application.h"
+#include "datedisplay/Application.h"
 #include "debug/Application.h"
 #include "menu/Application.h"
+#include "photoframe/Application.h"
 #include "setup/Application.h"
 #include "timeelapsed/Application.h"
 #include "watchface/Application.h"
@@ -19,6 +21,10 @@ namespace Configuration
 class Service;
 }
 namespace Media
+{
+class Service;
+}
+namespace DateTime
 {
 class Service;
 }
@@ -52,8 +58,8 @@ class Container : public QObject
     void setReloading(bool reloading);
 
     // Factory method
-    Common::Application* createApplication(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media);
-    void reload(Services::Configuration::Service& configuration, Services::Media::Service& media);
+    Common::Application* createApplication(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::DateTime::Service& dateTime);
+    void reload(Services::Configuration::Service& configuration, Services::Media::Service& media, Services::DateTime::Service& dateTime);
 
   private:
     bool m_reloading = true;

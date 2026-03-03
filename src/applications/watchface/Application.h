@@ -31,6 +31,7 @@ class Application : public QObject
   private:
     void updateEnabledWatchfaces();
     void rotateToNext();
+    void startTimerForCurrentApp();
 
   private:
     const Common::DynamicApplicationMap& m_applications;

@@ -14,6 +14,8 @@ const QString PROPERTY_BASE_COLOR_KEY = QStringLiteral("base-color");
 const QColor PROPERTY_BASE_COLOR_DEFAULT = QColor("#02996c");
 const QString PROPERTY_ACCENT_COLOR_KEY = QStringLiteral("accent-color");
 const QColor PROPERTY_ACCENT_COLOR_DEFAULT = QColor("#BBBBBB");
+const QString PROPERTY_DURATION_KEY = QStringLiteral("duration");
+const int PROPERTY_DURATION_DEFAULT = 10;
 
 Configuration::Configuration(const QString& name, QObject* parent)
     : QObject(parent),
@@ -22,7 +24,8 @@ Configuration::Configuration(const QString& name, QObject* parent)
       m_background(PROPERTY_BACKGROUND_DEFAULT),
       m_backgroundOpacity(PROPERTY_BACKGROUND_OPACITY_DEFAULT),
       m_baseColor(PROPERTY_BASE_COLOR_DEFAULT),
-      m_accentColor(PROPERTY_ACCENT_COLOR_DEFAULT)
+      m_accentColor(PROPERTY_ACCENT_COLOR_DEFAULT),
+      m_duration(PROPERTY_DURATION_DEFAULT)
 {
 }
 
@@ -36,6 +39,7 @@ QJsonObject Configuration::toJson() const
     json[PROPERTY_BACKGROUND_OPACITY_KEY] = m_backgroundOpacity;
     json[PROPERTY_BASE_COLOR_KEY] = m_baseColor.name();
     json[PROPERTY_ACCENT_COLOR_KEY] = m_accentColor.name();
+    json[PROPERTY_DURATION_KEY] = m_duration;
 
     return json;
 }
@@ -57,6 +61,9 @@ void Configuration::fromJson(const QJsonObject& json)
     }
     if (json.contains(PROPERTY_ACCENT_COLOR_KEY)) {
         setAccentColor(QColor(json[PROPERTY_ACCENT_COLOR_KEY].toString()));
+    }
+    if (json.contains(PROPERTY_DURATION_KEY)) {
+        setDuration(json[PROPERTY_DURATION_KEY].toInt());
     }
 }
 
@@ -137,6 +144,22 @@ void Configuration::setAccentColor(const QColor& accentColor)
     emit accentColorChanged();
 }
 
+int Configuration::duration() const
+{
+    return m_duration;
+}
+
+void Configuration::setDuration(int duration)
+{
+    duration = qBound(3, duration, 60);
+    if (m_duration == duration) {
+        return;
+    }
+
+    m_duration = duration;
+    emit durationChanged();
+}
+
 Configuration& Configuration::operator=(const Configuration& other)
 {
     if (this != &other) {
@@ -146,6 +169,7 @@ Configuration& Configuration::operator=(const Configuration& other)
         setBackground(other.m_background);
         setBaseColor(other.m_baseColor);
         setAccentColor(other.m_accentColor);
+        setDuration(other.m_duration);
     }
     return *this;
 }
@@ -160,7 +184,8 @@ QDebug operator<<(QDebug debug, const Configuration& config)
                     << " - background=" << config.background() << "\n"
                     << " - backgroundOpacity=" << config.backgroundOpacity() << "\n"
                     << " - baseColor=" << config.baseColor().name() << "\n"
-                    << " - accentColor=" << config.accentColor().name() << ")";
+                    << " - accentColor=" << config.accentColor().name() << "\n"
+                    << " - duration=" << config.duration() << "s)";
     return debug;
 }
 } // namespace Common
