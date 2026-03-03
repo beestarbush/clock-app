@@ -8,7 +8,7 @@ const bool PROPERTY_INITIALIZED_DEFAULT = false;
 const QString PROPERTY_TIMESTAMP_KEY = QStringLiteral("timestamp");
 constexpr quint64 PROPERTY_TIMESTAMP_DEFAULT = 0;
 
-TimerConfiguration::TimerConfiguration(QString name, QObject* parent)
+TimerConfiguration::TimerConfiguration(const QString& name, QObject* parent)
     : Common::Configuration(name, parent),
       m_initialized(PROPERTY_INITIALIZED_DEFAULT),
       m_timestamp(PROPERTY_TIMESTAMP_DEFAULT)

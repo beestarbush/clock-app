@@ -1,3 +1,6 @@
+#ifndef QMLCOMPONENTS_QRCODEIMAGE_H
+#define QMLCOMPONENTS_QRCODEIMAGE_H
+
 #include <QColor>
 #include <QQuickPaintedItem>
 #include <qrencode.h>
@@ -36,3 +39,5 @@ class QrCodeImage : public QQuickPaintedItem
     QColor m_foregroundColor = Qt::black;
     QColor m_backgroundColor = Qt::white;
 };
+
+#endif // QMLCOMPONENTS_QRCODEIMAGE_H

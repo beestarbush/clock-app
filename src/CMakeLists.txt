@@ -66,6 +66,8 @@ qt_add_executable(clock-app
     applications/common/Application.cpp
     applications/common/Configuration.h
     applications/common/Configuration.cpp
+    applications/common/TimerApplication.h
+    applications/common/TimerApplication.cpp
     applications/common/TimerConfiguration.h
     applications/common/TimerConfiguration.cpp
     applications/common/Types.h

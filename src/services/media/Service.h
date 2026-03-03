@@ -46,6 +46,7 @@ class Service : public QObject
   private:
     bool isValidFile(const QString& filePath) const;
     QString getMediaDirectory() const;
+    static QString mimeTypeForSuffix(const QString& suffix);
 
     void syncWithServerFiles(const QStringList& serverFilenames);
     void downloadMedia(const QString& mediaId);

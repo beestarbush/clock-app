@@ -113,6 +113,14 @@ QString Service::getMediaDirectory() const
     return MEDIA_PATH;
 }
 
+QString Service::mimeTypeForSuffix(const QString& suffix)
+{
+    if (suffix == "gif") return QStringLiteral("image/gif");
+    if (suffix == "png") return QStringLiteral("image/png");
+    if (suffix == "jpg" || suffix == "jpeg") return QStringLiteral("image/jpeg");
+    return QStringLiteral("unknown");
+}
+
 void Service::onMediaReceived(const QJsonObject& data)
 {
     qInfo() << "Received media notification from backend";
@@ -170,11 +178,7 @@ void Service::syncWithServerFiles(const QStringList& serverFilenames)
         if (!mediaToDownload.contains(file)) {
             QString filePath = mediaDir + "/" + file;
             QFileInfo fileInfo(filePath);
-            QString suffix = fileInfo.suffix().toLower();
-            QString type = "unknown";
-            if (suffix == "gif") type = "image/gif";
-            else if (suffix == "png") type = "image/png";
-            else if (suffix == "jpg" || suffix == "jpeg") type = "image/jpeg";
+            QString type = mimeTypeForSuffix(fileInfo.suffix().toLower());
 
             if (!m_model.contains(file)) {
                 m_model.addItem(new Item(file, file, filePath, type, fileInfo.size(), nullptr));
@@ -220,11 +224,7 @@ void Service::downloadMedia(const QString& filename)
 
             // Construct and add Item directly to the model
             QFileInfo fileInfo(filePath);
-            QString suffix = fileInfo.suffix().toLower();
-            QString type = "unknown";
-            if (suffix == "gif") type = "image/gif";
-            else if (suffix == "png") type = "image/png";
-            else if (suffix == "jpg" || suffix == "jpeg") type = "image/jpeg";
+            QString type = mimeTypeForSuffix(fileInfo.suffix().toLower());
 
             m_model.addItem(new Item(filename, filename, filePath, type, fileInfo.size(), nullptr));
         } else {

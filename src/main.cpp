@@ -1,6 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QElapsedTimer>
 
 #include "applications/Container.h"
 #include "applications/common/Types.h"
@@ -62,7 +63,7 @@ int main(int argc, char* argv[])
 
     engine.loadFromModule("Main", "Main");
 
-    quint32 lResult = app.exec();
+    int lResult = app.exec();
 
     Q_CLEANUP_RESOURCE(icons);
     return lResult;
