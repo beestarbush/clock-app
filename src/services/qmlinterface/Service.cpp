@@ -1,6 +1,10 @@
 #include "Service.h"
 #include <QDebug>
 #include <QQmlApplicationEngine>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(QmlService, "QmlService")
+
 using namespace Services::QmlInterface;
 
 Service::Service(QObject* parent)
@@ -11,7 +15,7 @@ Service::Service(QObject* parent)
 void Service::registerObject(const char* name, QObject* object)
 {
     if (!object) {
-        qWarning() << "Cannot register null object with name:" << name;
+        qCWarning(QmlService) << "Cannot register null object with name:" << name;
         return;
     }
 
@@ -21,6 +25,6 @@ void Service::registerObject(const char* name, QObject* object)
     if (!m_registeredObjectsNames.contains(name)) {
         qmlRegisterSingletonInstance("Bee", 1, 0, name, object);
         m_registeredObjectsNames.append(name);
-        qDebug() << "Registered QML interface:" << name << "in" << lTimer.elapsed() << "ms";
+        qCDebug(QmlService) << "Registered QML interface:" << name << "in" << lTimer.elapsed() << "ms";
     }
 }

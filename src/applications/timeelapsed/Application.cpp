@@ -2,6 +2,10 @@
 #include "services/media/Service.h"
 #include <QDateTime>
 #include <QDebug>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(TimeElapsedApplication, "TimeElapsedApplication")
+
 using namespace Applications::TimeElapsed;
 
 constexpr quint64 SECONDS_IN_MINUTE = 60;
@@ -42,13 +46,13 @@ Common::TimerConfiguration* Application::configuration() const
 void Application::applyConfiguration(const Common::TimerConfiguration& configuration)
 {
     *m_configuration = configuration;
-    qDebug() << "TimeElapsed configuration: " << *m_configuration;
+    qCDebug(TimeElapsedApplication) << "Configuration: " << *m_configuration;
 }
 
 void Application::applyConfiguration(const QJsonObject& configuration)
 {
     m_configuration->fromJson(configuration);
-    qDebug() << "TimeElapsed configuration: " << *m_configuration;
+    qCDebug(TimeElapsedApplication) << "Configuration: " << *m_configuration;
 }
 
 void Application::startTimer()

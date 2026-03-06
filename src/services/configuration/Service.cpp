@@ -4,6 +4,9 @@
 #include "services/websocket/Service.h"
 #include <QDebug>
 #include <QJsonObject>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(ConfigurationService, "ConfigurationService")
 
 using namespace Services::Configuration;
 
@@ -36,7 +39,7 @@ Service::Service(Services::WebSocket::Service& webSocket, QObject* parent)
                 if (success) {
                     onConfigurationReceived(result);
                 } else {
-                    qWarning() << "Failed to get config:" << error;
+                    qCWarning(ConfigurationService) << "Failed to get config:" << error;
                 }
             });
         }
@@ -52,21 +55,21 @@ DeviceConfiguration* Service::getCurrentConfiguration()
 
 void Service::triggerConfigurationChanged()
 {
-    qInfo() << "Manual configuration changed triggered!";
+    qCInfo(ConfigurationService) << "Manual configuration changed triggered!";
     emit configurationChanged();
 }
 
 void Service::onConfigurationReceived(const QJsonObject& configJson)
 {
-    qInfo() << "Received configuration JSON:" << QString::fromUtf8(QJsonDocument(configJson).toJson(QJsonDocument::Compact));
+    qCInfo(ConfigurationService) << "Received configuration JSON:" << QString::fromUtf8(QJsonDocument(configJson).toJson(QJsonDocument::Compact));
     if (configJson.isEmpty()) {
-        qWarning() << "Received empty configuration JSON";
+        qCWarning(ConfigurationService) << "Received empty configuration JSON";
         return;
     }
 
     // Validate if it looks like a config
     if (!configJson.contains("system-configuration")){
-        qWarning() << "Received invalid configuration JSON";
+        qCWarning(ConfigurationService) << "Received invalid configuration JSON";
         return;
     }
     setSyncing(true); // Indicate we are processing a new config
@@ -99,7 +102,7 @@ void Service::performStartupCheck()
     m_startupTimeoutTimer.setInterval(STARTUP_CHECK_TIMEOUT_MS);
     connect(&m_startupTimeoutTimer, &QTimer::timeout, this, [this]() {
         if (m_startupCheckInProgress) {
-            qWarning() << "Startup check timed out after" << STARTUP_CHECK_TIMEOUT_MS << "ms, using local configuration";
+            qCWarning(ConfigurationService) << "Startup check timed out after" << STARTUP_CHECK_TIMEOUT_MS << "ms, using local configuration";
             completeStartupCheck();
         }
     });
@@ -109,7 +112,7 @@ void Service::performStartupCheck()
     if (m_webSocket.connected()) {
         m_webSocket.request(Services::WebSocket::Method::GetConfig, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
             if (!success) {
-                qWarning() << "Failed to get config:" << error;
+                qCWarning(ConfigurationService) << "Failed to get config:" << error;
                 return;
             }
 
@@ -118,7 +121,7 @@ void Service::performStartupCheck()
         return;
     }
 
-    qInfo() << "Waiting for WebSocket connection (max" << STARTUP_CHECK_TIMEOUT_MS << "ms)...";
+    qCInfo(ConfigurationService) << "Waiting for WebSocket connection (max" << STARTUP_CHECK_TIMEOUT_MS << "ms)...";
     
     m_startupConnectionWatcher = connect(&m_webSocket,
                                          &Services::WebSocket::Service::connectedChanged,
@@ -130,7 +133,7 @@ void Service::performStartupCheck()
                                                      if (success) {
                                                          onConfigurationReceived(result);
                                                      } else {
-                                                        qWarning() << "Failed to get config:" << error;
+                                                        qCWarning(ConfigurationService) << "Failed to get config:" << error;
                                                      }
                                                  });
                                              }
@@ -146,11 +149,11 @@ void Service::completeStartupCheck()
 
     if (!m_currentConfig || !m_currentConfig->isValid()) {
         //loadLocalConfiguration();
-        qInfo() << "No valid configuration loaded during startup check";
+        qCInfo(ConfigurationService) << "No valid configuration loaded during startup check";
     }
 
     emit configurationChanged();
-    qInfo() << "Startup check complete. Waiting for push updates.";
+    qCInfo(ConfigurationService) << "Startup check complete. Waiting for push updates.";
 }
 
 void Service::loadLocalConfiguration()
@@ -158,12 +161,12 @@ void Service::loadLocalConfiguration()
     DeviceConfiguration config = DeviceConfiguration::loadFromFile(CONFIGURATION_PATH);
 
     if (config.isValid() && config.hasApplications()) {
-        qInfo() << "Loaded local configuration, version:" << config.version;
+        qCInfo(ConfigurationService) << "Loaded local configuration, version:" << config.version;
         updateCurrentConfig(config);
         setConfigVersion(config.version);
     }
     else {
-        qInfo() << "No valid local configuration found";
+        qCInfo(ConfigurationService) << "No valid local configuration found";
     }
 }
 

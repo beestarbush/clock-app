@@ -1,12 +1,15 @@
 #include "Application.h"
 #include "applications/clock/Application.h"
 #include "applications/countdown/Application.h"
-#include "applications/datedisplay/Application.h"
-#include "applications/photoframe/Application.h"
+#include "applications/currentdate/Application.h"
+#include "applications/nooperation/Application.h"
 #include "applications/timeelapsed/Application.h"
 
 #include <QDebug>
 #include <algorithm>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(WatchfaceApplication, "WatchfaceApplication")
 
 namespace Applications
 {
@@ -26,10 +29,10 @@ Application::Application(const Common::DynamicApplicationMap& applications, QObj
 
     if (!m_enabledWatchfaces.isEmpty()) {
         startTimerForCurrentApp();
-        qDebug() << "Watchface::Application initialized with" << m_enabledWatchfaces.size() << "enabled watchfaces";
+        qCDebug(WatchfaceApplication) << "Watchface::Application initialized with" << m_enabledWatchfaces.size() << "enabled watchfaces";
     }
     else {
-        qDebug() << "Watchface::Application: No enabled watchfaces found";
+        qCDebug(WatchfaceApplication) << "Watchface::Application: No enabled watchfaces found";
     }
 }
 
@@ -47,11 +50,11 @@ void Application::refresh()
 
     if (!m_enabledWatchfaces.isEmpty()) {
         startTimerForCurrentApp();
-        qDebug() << "Watchface::Application refreshed with" << m_enabledWatchfaces.size() << "enabled watchfaces";
+        qCDebug(WatchfaceApplication) << "Watchface::Application refreshed with" << m_enabledWatchfaces.size() << "enabled watchfaces";
     }
     else {
         m_rotationTimer->stop();
-        qDebug() << "Watchface::Application refreshed: No enabled watchfaces found";
+        qCDebug(WatchfaceApplication) << "Watchface::Application refreshed: No enabled watchfaces found";
     }
 
     emit currentAppChanged();
@@ -98,7 +101,7 @@ void Application::updateEnabledWatchfaces()
         case Common::Type::Clock: {
             auto* castedApp = dynamic_cast<Applications::Clock::Application*>(app);
             if (!castedApp) {
-                qDebug() << "Watchface: Failed to cast application" << it.key() << "to Clock::Application";
+                qCDebug(WatchfaceApplication) << "Watchface: Failed to cast application" << it.key() << "to Clock::Application";
                 continue;
             }
 
@@ -108,7 +111,7 @@ void Application::updateEnabledWatchfaces()
         case Common::Type::TimeElapsed: {
             auto* castedApp = dynamic_cast<Applications::TimeElapsed::Application*>(app);
             if (!castedApp) {
-                qDebug() << "Watchface: Failed to cast application" << it.key() << "to TimeElapsed::Application";
+                qCDebug(WatchfaceApplication) << "Watchface: Failed to cast application" << it.key() << "to TimeElapsed::Application";
                 continue;
             }
 
@@ -118,27 +121,27 @@ void Application::updateEnabledWatchfaces()
         case Common::Type::Countdown: {
             auto* castedApp = dynamic_cast<Applications::Countdown::Application*>(app);
             if (!castedApp) {
-                qDebug() << "Watchface: Failed to cast application" << it.key() << "to Countdown::Application";
+                qCDebug(WatchfaceApplication) << "Watchface: Failed to cast application" << it.key() << "to Countdown::Application";
                 continue;
             }
 
             m_enabledWatchfaces.append(castedApp);
         } break;
 
-        case Common::Type::PhotoFrame: {
-            auto* castedApp = dynamic_cast<Applications::PhotoFrame::Application*>(app);
+        case Common::Type::NoOperation: {
+            auto* castedApp = dynamic_cast<Applications::NoOperation::Application*>(app);
             if (!castedApp) {
-                qDebug() << "Watchface: Failed to cast application" << it.key() << "to PhotoFrame::Application";
+                qCDebug(WatchfaceApplication) << "Watchface: Failed to cast application" << it.key() << "to NoOperation::Application";
                 continue;
             }
 
             m_enabledWatchfaces.append(castedApp);
         } break;
 
-        case Common::Type::DateDisplay: {
-            auto* castedApp = dynamic_cast<Applications::DateDisplay::Application*>(app);
+        case Common::Type::CurrentDate: {
+            auto* castedApp = dynamic_cast<Applications::CurrentDate::Application*>(app);
             if (!castedApp) {
-                qDebug() << "Watchface: Failed to cast application" << it.key() << "to DateDisplay::Application";
+                qCDebug(WatchfaceApplication) << "Watchface: Failed to cast application" << it.key() << "to CurrentDate::Application";
                 continue;
             }
 
@@ -147,7 +150,7 @@ void Application::updateEnabledWatchfaces()
 
         case Common::Type::Unknown:
         default:
-            qDebug() << "Watchface: Application" << it.key() << "is not of any type, skipping";
+            qCDebug(WatchfaceApplication) << "Watchface: Application" << it.key() << "is not of any type, skipping";
             continue;
         }
     }

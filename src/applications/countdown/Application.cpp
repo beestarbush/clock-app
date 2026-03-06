@@ -2,6 +2,10 @@
 #include "services/media/Service.h"
 #include <QDateTime>
 #include <QDebug>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(CountdownApplication, "CountdownApplication")
+
 using namespace Applications::Countdown;
 
 constexpr quint64 SECONDS_IN_MINUTE = 60;
@@ -43,13 +47,13 @@ Common::TimerConfiguration* Application::configuration() const
 void Application::applyConfiguration(const Common::TimerConfiguration& configuration)
 {
     *m_configuration = configuration;
-    qDebug() << "Countdown configuration: " << *m_configuration;
+    qCDebug(CountdownApplication) << "Configuration: " << *m_configuration;
 }
 
 void Application::applyConfiguration(const QJsonObject& configuration)
 {
     m_configuration->fromJson(configuration);
-    qDebug() << "Countdown configuration: " << *m_configuration;
+    qCDebug(CountdownApplication) << "Configuration: " << *m_configuration;
 }
 
 void Application::startTimer()

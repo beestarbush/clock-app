@@ -12,7 +12,7 @@ enum class MessageType
     Request,
     Response,
     Publish,
-    Unknown
+    UnknownMessageType
 };
 Q_ENUM_NS(MessageType)
 
@@ -22,7 +22,13 @@ enum class Method
     Unsubscribe,
     GetConfig,
     GetMedia,
-    Unknown
+    GetTemperature,
+    SetBrightness,
+    SetVolume,
+    SetDeviceId,
+    Shutdown,
+    Reboot,
+    UnknownMethod
 };
 Q_ENUM_NS(Method)
 
@@ -32,7 +38,7 @@ enum class Topic
     Media,
     ApplicationStatus,
     Temperature,
-    Unknown
+    UnknownTopic
 };
 Q_ENUM_NS(Topic)
 
@@ -48,7 +54,7 @@ inline MessageType messageTypeFromString(const QString& typeStr)
         return MessageType::Publish;
     }
     else {
-        return MessageType::Unknown;
+        return MessageType::UnknownMessageType;
     }
 }
 
@@ -78,6 +84,18 @@ inline QString methodToString(Method type)
         return "getConfig";
     case Method::GetMedia:
         return "getMedia";
+    case Method::GetTemperature:
+        return "getTemperature";
+    case Method::SetBrightness:
+        return "setBrightness";
+    case Method::SetVolume:
+        return "setVolume";
+    case Method::SetDeviceId:
+        return "setDeviceId";
+    case Method::Shutdown:
+        return "shutdown";
+    case Method::Reboot:
+        return "reboot";
     default:
         return "unknown";
     }
@@ -98,7 +116,7 @@ inline Topic topicFromString(const QString& topicStr)
         return Topic::Temperature;
     }
     else {
-        return Topic::Unknown;
+        return Topic::UnknownTopic;
     }
 }
 

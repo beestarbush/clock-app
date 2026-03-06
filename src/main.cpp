@@ -11,6 +11,9 @@
 #include "qmlcomponents/RoundAnimatedImage.h"
 #include "qmlcomponents/QrCodeImage.h"
 #include "services/Container.h"
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(Main, "Main")
 
 int main(int argc, char* argv[])
 {
@@ -25,11 +28,11 @@ int main(int argc, char* argv[])
     lTimer.start();
 
     Drivers::Container drivers(&app);
-    qDebug() << "Initialized Drivers in" << lTimer.restart() << "ms";
+    qCDebug(Main) << "Initialized Drivers in" << lTimer.restart() << "ms";
     Services::Container services(drivers, &app);
-    qDebug() << "Initialized Services in" << lTimer.restart() << "ms";
+    qCDebug(Main) << "Initialized Services in" << lTimer.restart() << "ms";
     Applications::Container applications(services, &app);
-    qDebug() << "Initialized Applications in" << lTimer.elapsed() << "ms";
+    qCDebug(Main) << "Initialized Applications in" << lTimer.elapsed() << "ms";
 
     auto qmlInterface = services.qmlInterface();
     qmlInterface->registerObject("QmlInterface", qmlInterface);

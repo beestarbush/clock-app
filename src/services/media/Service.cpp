@@ -7,6 +7,9 @@
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(MediaService, "MediaService")
 
 using namespace Services::Media;
 
@@ -41,7 +44,7 @@ Service::Service(Services::WebSocket::Service& webSocket, Services::Rest::Servic
                  if (success) {
                      onMediaReceived(result);
                  } else {
-                     qWarning() << "Failed to get media:" << error;
+                     qCWarning(MediaService) << "Failed to get media:" << error;
                  }
              });
         }
@@ -84,7 +87,7 @@ QString Service::getMediaPath(const QString& name) const
         return fullPath;
     }
 
-    qWarning() << "Requested media not found or invalid:" << fullPath << ", falling back to default.";
+    qCWarning(MediaService) << "Requested media not found or invalid:" << fullPath << ", falling back to default.";
     return DEFAULT_MEDIA;
 }
 
@@ -95,13 +98,13 @@ bool Service::isValidFile(const QString& filePath) const
     // Check file extension
     QString suffix = fileInfo.suffix().toLower();
     if (suffix != "gif" && suffix != "png" && suffix != "jpg" && suffix != "jpeg") {
-        qDebug() << "Invalid media file extension:" << filePath;
+        qCDebug(MediaService) << "Invalid media file extension:" << filePath;
         return false;
     }
 
     // Basic file size check (avoid empty files)
     if (fileInfo.size() < MIN_MEDIA_FILE_SIZE) {
-        qDebug() << "Invalid media file size:" << filePath;
+        qCDebug(MediaService) << "Invalid media file size:" << filePath;
         return false;
     }
 
@@ -115,9 +118,9 @@ QString Service::getMediaDirectory() const
 
 void Service::onMediaReceived(const QJsonObject& data)
 {
-    qInfo() << "Received media notification from backend";
+    qCInfo(MediaService) << "Received media notification from backend";
     if (data.isEmpty()) {
-        qWarning() << "Received empty media data";
+        qCWarning(MediaService) << "Received empty media data";
          return;
     }
 
@@ -203,7 +206,7 @@ void Service::downloadMedia(const QString& filename)
         m_pendingDownloads.removeOne(filename);
 
         if (!success) {
-            qWarning() << "Failed to download" << filename << ":" << error;
+            qCWarning(MediaService) << "Failed to download" << filename << ":" << error;
             if (m_pendingDownloads.isEmpty()) {
                 if (m_lastError.isEmpty()) completeSyncWithSuccess();
                 else completeSyncWithError("Some downloads failed");
@@ -216,7 +219,7 @@ void Service::downloadMedia(const QString& filename)
         if (file.open(QIODevice::WriteOnly)) {
             file.write(data);
             file.close();
-            qDebug() << "Downloaded:" << filename;
+            qCDebug(MediaService) << "Downloaded:" << filename;
 
             // Construct and add Item directly to the model
             QFileInfo fileInfo(filePath);
@@ -228,7 +231,7 @@ void Service::downloadMedia(const QString& filename)
 
             m_model.addItem(new Item(filename, filename, filePath, type, fileInfo.size(), nullptr));
         } else {
-            qWarning() << "Failed to write downloaded file:" << filePath;
+            qCWarning(MediaService) << "Failed to write downloaded file:" << filePath;
         }
 
         if (m_pendingDownloads.isEmpty()) {
@@ -249,7 +252,7 @@ void Service::completeSyncWithSuccess()
         completeStartupCheck();
     }
 
-    qDebug() << "Media sync completed successfully";
+    qCDebug(MediaService) << "Sync completed!";
 }
 
 void Service::completeSyncWithError(const QString& error)
@@ -259,7 +262,7 @@ void Service::completeSyncWithError(const QString& error)
 
     emit lastErrorChanged();
 
-    qWarning() << "Media sync failed:" << error;
+    qCWarning(MediaService) << "Sync failed:" << error;
 
     if (m_startupCheckInProgress) {
         completeStartupCheck();
@@ -279,7 +282,7 @@ void Service::performStartupCheck()
     m_startupTimeoutTimer.setInterval(INITIAL_SYNC_DELAY_MS);
     connect(&m_startupTimeoutTimer, &QTimer::timeout, this, [this]() {
         if (m_startupCheckInProgress) {
-            qWarning() << "Media startup check timed out, marking complete";
+            qCWarning(MediaService) << "Startup check timed out, marking complete";
             completeStartupCheck();
         }
     });
@@ -299,7 +302,7 @@ void Service::performStartupCheck()
     }
 
     // Otherwise wait for the connection
-    qInfo() << "Media: Waiting for WebSocket connection (max" << INITIAL_SYNC_DELAY_MS << "ms)...";
+    qCInfo(MediaService) << "Media: Waiting for WebSocket connection (max" << INITIAL_SYNC_DELAY_MS << "ms)...";
     
      m_startupConnectionWatcher = connect(&m_webSocket,
                                          &Services::WebSocket::Service::connectedChanged,
@@ -323,7 +326,7 @@ void Service::completeStartupCheck()
     m_startupTimeoutTimer.stop();
     disconnect(m_startupConnectionWatcher);
     setStartupCheckInProgress(false);
-    qInfo() << "Media startup check complete.";
+    qCInfo(MediaService) << "Startup check complete.";
 }
 
 void Service::setSyncing(bool syncing)

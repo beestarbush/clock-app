@@ -5,6 +5,7 @@
 
 #include "configuration/Service.h"
 #include "datetime/Service.h"
+#include "logging/Service.h"
 #include "media/Service.h"
 #include "notification/Service.h"
 #include "qmlinterface/Service.h"
@@ -30,6 +31,7 @@ class Container : public QObject
     Q_OBJECT
     Q_PROPERTY(Services::Media::Service* media MEMBER m_media CONSTANT)
     Q_PROPERTY(Services::DateTime::Service* dateTime MEMBER m_dateTime CONSTANT)
+    Q_PROPERTY(Services::Logging::Service* logging MEMBER m_logging CONSTANT)
     Q_PROPERTY(Services::Notification::Service* notification MEMBER m_notification CONSTANT)
     Q_PROPERTY(Services::QmlInterface::Service* qmlInterface MEMBER m_qmlInterface CONSTANT)
     Q_PROPERTY(Services::Version::Service* version MEMBER m_version CONSTANT)
@@ -48,6 +50,7 @@ class Container : public QObject
     Version::Service* m_version;
     Rest::Service* m_rest;
     WebSocket::Service* m_websocket;
+    Logging::Service* m_logging;
     Notification::Service* m_notification;
     Media::Service* m_media;
     SystemMonitor::Service* m_systemMonitor;

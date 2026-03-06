@@ -1,6 +1,10 @@
 #include "Application.h"
 #include "services/media/Service.h"
 #include <QDebug>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(ClockApplication, "ClockApplication")
+
 using namespace Applications::Clock;
 
 Application::Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, QObject* parent)
@@ -22,11 +26,11 @@ Configuration* Application::configuration() const
 void Application::applyConfiguration(const Configuration& configuration)
 {
     *m_configuration = configuration;
-    qDebug() << "Clock configuration: " << *m_configuration;
+    qCDebug(ClockApplication) << "Configuration: " << *m_configuration;
 }
 
 void Application::applyConfiguration(const QJsonObject& configuration)
 {
     m_configuration->fromJson(configuration);
-    qDebug() << "Clock configuration: " << *m_configuration;
+    qCDebug(ClockApplication) << "Configuration: " << *m_configuration;
 }

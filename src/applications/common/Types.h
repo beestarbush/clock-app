@@ -15,8 +15,8 @@ enum class Type
     Clock,
     TimeElapsed,
     Countdown,
-    PhotoFrame,
-    DateDisplay,
+    NoOperation,
+    CurrentDate,
     Unknown
 };
 Q_ENUM_NS(Type)
@@ -33,11 +33,11 @@ inline Type typeFromString(const QString& typeStr)
     else if (typeStr == "countdown") {
         return Type::Countdown;
     }
-    else if (typeStr == "photo-frame") {
-        return Type::PhotoFrame;
+    else if (typeStr == "no-operation") {
+        return Type::NoOperation;
     }
-    else if (typeStr == "date-display") {
-        return Type::DateDisplay;
+    else if (typeStr == "current-date") {
+        return Type::CurrentDate;
     }
     else {
         return Type::Unknown;
@@ -53,10 +53,10 @@ inline QString typeToString(Type type)
         return "time-elapsed";
     case Type::Countdown:
         return "countdown";
-    case Type::PhotoFrame:
-        return "photo-frame";
-    case Type::DateDisplay:
-        return "date-display";
+    case Type::NoOperation:
+        return "no-operation";
+    case Type::CurrentDate:
+        return "current-date";
     default:
         return "unknown";
     }
@@ -69,7 +69,7 @@ enum class Watchface
     RoundProgressBar,
     CountdownTimer,
     PhotoFrame,
-    DateDisplay,
+    DateFrame,
     None
 };
 Q_ENUM_NS(Watchface)
@@ -92,8 +92,8 @@ inline Watchface watchfaceFromString(const QString& watchfaceStr)
     else if (watchfaceStr == "photo-frame") {
         return Watchface::PhotoFrame;
     }
-    else if (watchfaceStr == "date-display") {
-        return Watchface::DateDisplay;
+    else if (watchfaceStr == "date-frame") {
+        return Watchface::DateFrame;
     }
     else {
         return Watchface::None;
@@ -113,8 +113,8 @@ inline QString watchfaceToString(Watchface watchface)
         return "countdown";
     case Watchface::PhotoFrame:
         return "photo-frame";
-    case Watchface::DateDisplay:
-        return "date-display";
+    case Watchface::DateFrame:
+        return "date-frame";
     default:
         return "";
     }

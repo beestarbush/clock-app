@@ -9,6 +9,12 @@
 namespace Services::Configuration
 {
 class Service;
+class DeviceConfiguration;
+}
+
+namespace Services::WebSocket
+{
+class Service;
 }
 
 namespace Common
@@ -75,6 +81,8 @@ class Application : public QObject
     Q_PROPERTY(QColor baseColor READ baseColor WRITE setBaseColor NOTIFY baseColorChanged)
     Q_PROPERTY(QColor accentColor READ accentColor WRITE setAccentColor NOTIFY accentColorChanged)
     Q_PROPERTY(QString deviceId READ deviceId WRITE setDeviceId NOTIFY deviceIdChanged)
+    Q_PROPERTY(int brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
+    Q_PROPERTY(int volume READ volume WRITE setVolume NOTIFY volumeChanged)
 
   public:
     // Setup panel types - generic phases
@@ -93,7 +101,10 @@ class Application : public QObject
     };
     Q_ENUM(PanelType)
 
-    Application(Common::DynamicApplicationMap& applications, Services::Configuration::Service& configurationService, QObject* parent = nullptr);
+    Application(Common::DynamicApplicationMap& applications,
+          Services::Configuration::Service& configurationService,
+          Services::WebSocket::Service& webSocket,
+          QObject* parent = nullptr);
 
     bool isSetupComplete() const;
 
@@ -124,8 +135,16 @@ class Application : public QObject
     QColor accentColor() const;
     void setAccentColor(const QColor& color);
 
+    int brightness() const;
+    void setBrightness(int value);
+
+    int volume() const;
+    void setVolume(int value);
+
     void applySystemConfiguration(const QJsonObject& systemConfig);
     QJsonObject buildSystemConfiguration() const;
+    
+    void applyDeviceConfiguration(const Services::Configuration::DeviceConfiguration& config);
 
     Q_INVOKABLE void finish();
     Q_INVOKABLE void next();
@@ -154,6 +173,8 @@ class Application : public QObject
     void baseColorChanged();
     void accentColorChanged();
     void deviceIdChanged();
+    void brightnessChanged();
+    void volumeChanged();
 
   private:
     void loadProperties();
@@ -178,6 +199,7 @@ class Application : public QObject
 
     // Services
     Services::Configuration::Service& m_configurationService;
+    Services::WebSocket::Service& m_webSocket;
 
     // System configuration
     QColor m_pendulumBobColor;
@@ -185,6 +207,8 @@ class Application : public QObject
     QColor m_pendulumBackgroundColor;
     QColor m_baseColor;
     QColor m_accentColor;
+    int m_brightness;
+    int m_volume;
 };
 } // namespace Applications::Setup
 

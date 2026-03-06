@@ -2,19 +2,22 @@
 #include "services/Container.h"
 #include "services/configuration/DeviceConfiguration.h"
 #include <QDebug>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(ApplicationContainer, "ApplicationContainer")
 
 using namespace Applications;
 
 Container::Container(Services::Container& services, QObject* parent)
     : QObject(parent),
       m_applications(),
-      m_setup(new Setup::Application(m_applications, *services.m_configuration, this)),
+      m_setup(new Setup::Application(m_applications, *services.m_configuration, *services.m_websocket, this)),
       m_debug(new Debug::Application(this)),
-      m_menu(new Menu::Application(this)),
+      m_menu(new Menu::Application(*services.m_websocket, this)),
       m_watchface(new Watchface::Application(m_applications, this))
 {
     connect(services.m_configuration, &Services::Configuration::Service::configurationChanged, this, [this, &services]() {
-        qInfo() << "Configuration changed, reloading applications";
+        qCInfo(ApplicationContainer) << "Configuration changed, reloading applications";
         reload(*services.m_configuration, *services.m_media, *services.m_dateTime);
     });
 
@@ -25,7 +28,7 @@ Container::Container(Services::Container& services, QObject* parent)
     }
 
     auto notification = services.m_notification;
-    notification->showInfo("System started", "The system is ready to use.", false);
+    notification->showInfo("Clock started", "The clock is ready to use.", false);
 }
 
 bool Container::reloading() const
@@ -47,31 +50,31 @@ void Container::reload(Services::Configuration::Service& configuration, Services
 
     Services::Configuration::DeviceConfiguration* config = configuration.getCurrentConfiguration();
     if (!config || !config->isValid() || !config->hasApplications()) {
-        qWarning() << "Invalid configuration retrieved.";
+        qCWarning(ApplicationContainer) << "Invalid configuration retrieved.";
         setReloading(false);
         return;
     }
 
     if (config->systemConfiguration.isEmpty()) {
-        qWarning() << "System configuration is empty.";
+        qCWarning(ApplicationContainer) << "System configuration is empty.";
         setReloading(false);
         return;
     }
 
-    qInfo() << "Applying system configuration from device configuration";
-    m_setup->applySystemConfiguration(config->systemConfiguration);
+    qCInfo(ApplicationContainer) << "Applying system configuration from device configuration";
+    m_setup->applyDeviceConfiguration(*config);
 
     // Destroy existing dynamic applications
-    qInfo() << "Destroying existing applications before reloading from configuration";
+    qCInfo(ApplicationContainer) << "Destroying existing applications before reloading from configuration";
     for (auto it = m_applications.begin(); it != m_applications.end(); ++it) {
         if (it.value()) {
-            qDebug() << "Destroying application:" << it.key();
+            qCDebug(ApplicationContainer) << "Destroying application:" << it.key();
             delete it.value();
         }
     }
     m_applications.clear();
 
-    qInfo() << "Creating" << config->applicationCount() << "applications from configuration";
+    qCInfo(ApplicationContainer) << "Creating" << config->applicationCount() << "applications from configuration";
     for (const QJsonObject& appConfig : config->applications) {
         QString id = appConfig["id"].toString();
         Common::Type type = Common::typeFromString(appConfig["type"].toString());
@@ -83,7 +86,7 @@ void Container::reload(Services::Configuration::Service& configuration, Services
             type == Common::Type::Unknown ||
             displayName.isEmpty() ||
             watchface == Common::Watchface::None) {
-            qWarning() << "Skipping creation of application with invalid metadata:" << appConfig;
+            qCWarning(ApplicationContainer) << "Skipping creation of application with invalid metadata:" << appConfig;
             continue;
         }
 
@@ -94,7 +97,7 @@ void Container::reload(Services::Configuration::Service& configuration, Services
             m_applications[id] = app;
         }
         else {
-            qWarning() << "Failed to create application:" << id << "of type:" << type;
+            qCWarning(ApplicationContainer) << "Failed to create application:" << id << "of type:" << type;
         }
     }
 
@@ -114,14 +117,14 @@ Common::Application* Container::createApplication(const QString& id, const Commo
     else if (type == Common::Type::Countdown) {
         return new Countdown::Application(id, type, displayName, order, watchface, media, this);
     }
-    else if (type == Common::Type::PhotoFrame) {
-        return new PhotoFrame::Application(id, type, displayName, order, watchface, media, this);
+    else if (type == Common::Type::NoOperation) {
+        return new NoOperation::Application(id, type, displayName, order, watchface, media, this);
     }
-    else if (type == Common::Type::DateDisplay) {
-        return new DateDisplay::Application(id, type, displayName, order, watchface, media, dateTime, this);
+    else if (type == Common::Type::CurrentDate) {
+        return new CurrentDate::Application(id, type, displayName, order, watchface, media, dateTime, this);
     }
     else {
-        qWarning() << "Unknown application type:" << type;
+        qCWarning(ApplicationContainer) << "Unknown application type:" << type;
         return nullptr;
     }
 }

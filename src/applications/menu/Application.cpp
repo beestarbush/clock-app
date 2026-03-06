@@ -1,17 +1,26 @@
 #include "Application.h"
+#include "services/websocket/Service.h"
+#include "services/websocket/Types.h"
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(MenuApplication, "MenuApplication")
+
 using namespace Applications::Menu;
 
-Application::Application(QObject* parent)
+Application::Application(Services::WebSocket::Service& websocket, QObject* parent)
     : QObject(parent),
       m_main(this),
       m_dialog(None),
       m_dialogParam(-1),
+      m_websocket(websocket),
       m_mainItems{
           Item("Menu", "qrc:/Icons/home.svg", this),
           Item("Display brightness", "qrc:/Icons/brightness.svg", this),
+          Item("Volume", "qrc:/Icons/speaker.svg", this),
           Item("Customize", "qrc:/Icons/customize.svg", this),
           Item("Notifications", "qrc:/Icons/notifications.svg", this),
-          Item("Version", "qrc:/Icons/version.svg", this)}
+          Item("Version", "qrc:/Icons/version.svg", this),
+          Item("Power off", "qrc:/Icons/power-off.svg", this)}
 {
     buildMenus();
 }
@@ -40,6 +49,9 @@ void Application::buildMenus()
     m_mainItems[MainBrightness].setAction([this]() {
         showDialog(ScreenBrightness);
     });
+    m_mainItems[MainVolume].setAction([this]() {
+        showDialog(Volume);
+    });
     m_mainItems[MainNotifications].setAction([this]() {
         showDialog(Notifications);
     });
@@ -48,6 +60,9 @@ void Application::buildMenus()
     });
     m_mainItems[MainCustomize].setAction([this]() {
         showDialog(Customize);
+    });
+    m_mainItems[MainPowerOff].setAction([this]() {
+        showDialog(PowerOff);
     });
 
     for (auto& item : m_mainItems)
@@ -72,6 +87,16 @@ void Application::closeDialog()
 
 void Application::dialWheelValueChanged(int value)
 {
-    qDebug() << "Dial wheel value changed:" << value;
     // Handle dial wheel value change based on context
+}
+
+void Application::shutdown()
+{
+    m_websocket.request(Services::WebSocket::Method::Shutdown, QJsonObject(), [](bool success, const QJsonObject&, const QString& error) {
+        if (success) {
+            qCInfo(MenuApplication) << "System shutdown initiated";
+        } else {
+            qCWarning(MenuApplication) << "Failed to shutdown system:" << error;
+        }
+    });
 }

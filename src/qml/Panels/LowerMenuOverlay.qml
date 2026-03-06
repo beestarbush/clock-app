@@ -28,9 +28,11 @@ PanelContainer {
         switch(menu ? menu.dialog : 0) {
             case Backend.MenuEnums.Version: return indexOfPanel(versionDialog)
             case Backend.MenuEnums.ScreenBrightness: return indexOfPanel(screenBrightnessDialog)
+            case Backend.MenuEnums.Volume: return indexOfPanel(volumeDialog)
             case Backend.MenuEnums.Notifications: return indexOfPanel(notificationDialog)
             case Backend.MenuEnums.DialWheel: return indexOfPanel(dialWheelDialog)
             case Backend.MenuEnums.Customize: return indexOfPanel(customizeDialog)
+            case Backend.MenuEnums.PowerOff: return indexOfPanel(powerOffDialog)
             default: return indexOfPanel(emptyDialog)
         }
     }
@@ -111,7 +113,7 @@ PanelContainer {
             property bool incrementMode: true // true: increment, false: decrement
 
             // The value you want to control
-            property real value: Backend.Drivers.screen.brightness
+            property real value: Backend.Applications.setup.brightness
 
             // Interpolate between Color.gray and Color.green1
             function lerpColor(a, b, t) {
@@ -142,13 +144,76 @@ PanelContainer {
                         }
                     }
 
-                    Backend.Drivers.screen.brightness = brightnessButton.value
+                    // Send brightness update to backend
+                    Backend.Applications.setup.brightness = Math.round(brightnessButton.value);
                 }
             }
 
             onPressed: brightnessHoldTimer.start()
             onReleased: {
                 brightnessHoldTimer.stop()
+                // Toggle increment/decrement mode
+                incrementMode = !incrementMode
+            }
+        }
+    }
+
+    MenuDialog {
+        id: volumeDialog
+
+        anchors.fill: parent
+
+        RoundButton {
+            id: volumeButton
+
+            anchors.fill: parent
+            anchors.centerIn: parent
+
+            property real minValue: 0
+            property real maxValue: 100
+            property real step: 1
+            property bool incrementMode: true // true: increment, false: decrement
+
+            // The value you want to control
+            property real value: Backend.Applications.setup.volume
+
+            // Interpolate between Color.gray and Color.green1
+            function lerpColor(a, b, t) {
+                return Qt.rgba(
+                    a.r + (b.r - a.r) * t,
+                    a.g + (b.g - a.g) * t,
+                    a.b + (b.b - a.b) * t,
+                    a.a + (b.a - a.a) * t
+                )
+            }
+            color: lerpColor(Color.gray, Color.green1, value / 100)
+
+            text: Math.round(value) + "%"
+
+            Timer {
+                id: volumeHoldTimer
+                interval: 60
+                repeat: true
+                running: false
+                onTriggered: {
+                    if (volumeButton.incrementMode) {
+                        if (volumeButton.value < volumeButton.maxValue) {
+                            volumeButton.value = Math.min(volumeButton.value + volumeButton.step, volumeButton.maxValue)
+                        }
+                    } else {
+                        if (volumeButton.value > volumeButton.minValue) {
+                            volumeButton.value = Math.max(volumeButton.value - volumeButton.step, volumeButton.minValue)
+                        }
+                    }
+
+                    // Send volume update to backend
+                    Backend.Applications.setup.volume = Math.round(volumeButton.value);
+                }
+            }
+
+            onPressed: volumeHoldTimer.start()
+            onReleased: {
+                volumeHoldTimer.stop()
                 // Toggle increment/decrement mode
                 incrementMode = !incrementMode
             }
@@ -293,6 +358,108 @@ PanelContainer {
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
+        }
+    }
+
+    MenuDialog {
+        id: powerOffDialog
+        anchors.fill: parent
+
+        property bool shutdownInitiated: false
+
+        MouseArea {
+            anchors.fill: parent
+            onPressed: powerOffTimer.start()
+            onReleased: {
+                powerOffTimer.stop()
+                powerOffTimer.progress = 0
+            }
+            onCanceled: {
+                powerOffTimer.stop()
+                powerOffTimer.progress = 0
+            }
+        }
+
+        Timer {
+            id: powerOffTimer
+            interval: 50
+            running: false
+            repeat: true
+
+            property int progress: 0
+            readonly property int totalSteps: 60 // 3000ms / 50ms = 60 steps
+
+            onTriggered: {
+                progress++
+                if (progress >= totalSteps) {
+                    stop()
+                    powerOffDialog.shutdownInitiated = true
+                    Backend.Applications.menu.shutdown()
+                }
+            }
+        }
+
+        // Visual feedback circle that fills up
+        Circle {
+            anchors.centerIn: parent
+            width: Math.min(parent.width, parent.height) * 0.8
+            height: width
+            color: "transparent"
+            border.width: 4
+            border.color: Color.lightGray
+
+            // Progress arc
+            Canvas {
+                id: progressCanvas
+                anchors.fill: parent
+                
+                onPaint: {
+                    var ctx = getContext("2d")
+                    ctx.clearRect(0, 0, width, height)
+                    
+                    if (powerOffTimer.progress > 0) {
+                        var centerX = width / 2
+                        var centerY = height / 2
+                        var radius = Math.min(width, height) / 2 - 2
+                        var startAngle = -Math.PI / 2
+                        var progressRatio = powerOffTimer.progress / powerOffTimer.totalSteps
+                        var endAngle = startAngle + (2 * Math.PI * progressRatio)
+                        
+                        ctx.beginPath()
+                        ctx.arc(centerX, centerY, radius, startAngle, endAngle, false)
+                        ctx.lineWidth = 4
+                        ctx.strokeStyle = Color.red
+                        ctx.stroke()
+                    }
+                }
+                
+                Connections {
+                    target: powerOffTimer
+                    function onProgressChanged() {
+                        progressCanvas.requestPaint()
+                    }
+                }
+            }
+        }
+
+        Text {
+            anchors.centerIn: parent
+            width: parent.width - Value.largeMargin
+            font.bold: true
+            font.pixelSize: Value.defaultTextSize
+            text: powerOffDialog.shutdownInitiated ? Translation.powerOffDialogShuttingDownText : Translation.powerOffDialogHoldText
+            wrapMode: Text.Wrap
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            color: powerOffDialog.shutdownInitiated ? Color.red : Color.lightGray
+        }
+
+        onVisibleChanged: {
+            if (!visible) {
+                shutdownInitiated = false
+                powerOffTimer.stop()
+                powerOffTimer.progress = 0
+            }
         }
     }
 }

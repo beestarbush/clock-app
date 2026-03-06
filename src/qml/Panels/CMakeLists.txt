@@ -9,7 +9,7 @@ qt_add_qml_module(PanelLib
     QML_FILES
         ClockPanel.qml
         CountdownPanel.qml
-        DateDisplayPanel.qml
+        DateFramePanel.qml
         DebugPanel.qml
         Debug/GalleryPanel.qml
         Debug/InspectorPanel.qml

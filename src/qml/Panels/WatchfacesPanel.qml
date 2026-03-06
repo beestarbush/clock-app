@@ -30,7 +30,7 @@ Panel {
                 return 4
             if (currentApp.watchface === Backend.Common.Watchface.PhotoFrame)
                 return 5
-            if (currentApp.watchface === Backend.Common.Watchface.DateDisplay)
+            if (currentApp.watchface === Backend.Common.Watchface.DateFrame)
                 return 6
             return 0
         }
@@ -136,14 +136,18 @@ Panel {
             onClicked: watchfacesPanel.clicked()
         }
 
-        // Date Display Panel
-        DateDisplayPanel {
-            id: dateDisplayPanel
+        // Date Frame Panel
+        DateFramePanel {
+            id: dateFramePanel
 
             backgroundSource: (currentAppValid && Backend.Services.media.getMediaPath(currentApp.configuration.background)) || ""
             backgroundOpacity: (currentAppValid && currentApp.configuration.backgroundOpacity) || 0
             textColor: (currentAppValid && currentApp.configuration.accentColor) || "white"
             currentDate: (currentAppValid && currentApp.currentDate) || ""
+            year: (currentAppValid && currentApp.year) || 0
+            month: (currentAppValid && currentApp.month) || 0
+            day: (currentAppValid && currentApp.day) || 0
+            dayOfWeek: (currentAppValid && currentApp.dayOfWeek) || 0
             onClicked: watchfacesPanel.clicked()
         }
     }

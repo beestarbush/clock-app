@@ -1,5 +1,5 @@
-#ifndef APPS_DATEDISPLAY_H
-#define APPS_DATEDISPLAY_H
+#ifndef APPS_CURRENTDATE_H
+#define APPS_CURRENTDATE_H
 
 #include "applications/common/Application.h"
 #include "applications/common/Configuration.h"
@@ -16,13 +16,17 @@ namespace Services::DateTime
 class Service;
 }
 
-namespace Applications::DateDisplay
+namespace Applications::CurrentDate
 {
 class Application : public Common::Application
 {
     Q_OBJECT
     Q_PROPERTY(Common::Configuration* configuration READ configuration CONSTANT)
     Q_PROPERTY(QString currentDate READ currentDate NOTIFY currentDateChanged)
+    Q_PROPERTY(int year READ year NOTIFY yearChanged)
+    Q_PROPERTY(int month READ month NOTIFY monthChanged)
+    Q_PROPERTY(int day READ day NOTIFY dayChanged)
+    Q_PROPERTY(int dayOfWeek READ dayOfWeek NOTIFY dayOfWeekChanged)
 
   public:
     Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::DateTime::Service& dateTime, QObject* parent = nullptr);
@@ -31,9 +35,20 @@ class Application : public Common::Application
     void applyConfiguration(const QJsonObject& configuration) override;
 
     QString currentDate() const;
+    int year() const;
+    int month() const;
+    int day() const;
+    int dayOfWeek() const;
 
   signals:
     void currentDateChanged();
+    void yearChanged();
+    void monthChanged();
+    void dayChanged();
+    void dayOfWeekChanged();
+
+  private slots:
+    void notifyDateChanged();
 
   private:
     Common::Configuration* m_configuration;
@@ -41,6 +56,6 @@ class Application : public Common::Application
     Services::DateTime::Service& m_dateTime;
     QTimer* m_updateTimer;
 };
-} // namespace Applications::DateDisplay
+} // namespace Applications::CurrentDate
 
-#endif // APPS_DATEDISPLAY_H
+#endif // APPS_CURRENTDATE_H
