@@ -17,12 +17,8 @@ qt_add_executable(clock-app
     drivers/Container.h
     drivers/network/Driver.cpp
     drivers/network/Driver.h
-    drivers/screen/Driver.cpp
-    drivers/screen/Driver.h
     drivers/storage/Driver.cpp
     drivers/storage/Driver.h
-    drivers/system/Driver.cpp
-    drivers/system/Driver.h
     qmlcomponents/QmlUtils.cpp
     qmlcomponents/QmlUtils.h
     qmlcomponents/RoundAnimatedImage.cpp
@@ -37,6 +33,12 @@ qt_add_executable(clock-app
     services/media/Model.h
     services/media/Service.cpp
     services/media/Service.h
+    services/logging/Item.cpp
+    services/logging/Item.h
+    services/logging/Model.cpp
+    services/logging/Model.h
+    services/logging/Service.cpp
+    services/logging/Service.h
     services/notification/Service.cpp
     services/notification/Service.h
     services/qmlinterface/Service.cpp
@@ -91,10 +93,10 @@ qt_add_executable(clock-app
     applications/menu/Model.h
     applications/setup/Application.cpp
     applications/setup/Application.h
-    applications/photoframe/Application.cpp
-    applications/photoframe/Application.h
-    applications/datedisplay/Application.cpp
-    applications/datedisplay/Application.h
+    applications/nooperation/Application.cpp
+    applications/nooperation/Application.h
+    applications/currentdate/Application.cpp
+    applications/currentdate/Application.h
     applications/watchface/Application.cpp
     applications/watchface/Application.h
 )

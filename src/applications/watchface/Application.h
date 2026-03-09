@@ -41,3 +41,4 @@ class Application : public QObject
 } // namespace Applications::Watchface
 
 #endif // APPS_WATCHFACE_APPLICATION_H
+

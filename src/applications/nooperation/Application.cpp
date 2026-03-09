@@ -1,7 +1,11 @@
 #include "Application.h"
 #include "services/media/Service.h"
 #include <QDebug>
-using namespace Applications::PhotoFrame;
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(NoOperationApplication, "NoOperationApplication")
+
+using namespace Applications::NoOperation;
 
 Application::Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, QObject* parent)
     : Common::Application(id, type, displayName, order, watchface, parent),
@@ -22,5 +26,5 @@ Common::Configuration* Application::configuration() const
 void Application::applyConfiguration(const QJsonObject& configuration)
 {
     m_configuration->fromJson(configuration);
-    qDebug() << "PhotoFrame configuration: " << *m_configuration;
+    qCDebug(NoOperationApplication) << "Configuration: " << *m_configuration;
 }

@@ -1,7 +1,9 @@
 #include "Application.h"
 
-#include <QDebug>
+#include <QLoggingCategory>
 #include <algorithm>
+
+Q_LOGGING_CATEGORY(WatchfaceApplication, "WatchfaceApplication")
 
 namespace Applications::Watchface
 {
@@ -19,10 +21,10 @@ Application::Application(const Common::DynamicApplicationMap& applications, QObj
 
     if (!m_enabledWatchfaces.isEmpty()) {
         startTimerForCurrentApp();
-        qDebug() << "Watchface::Application initialized with" << m_enabledWatchfaces.size() << "enabled watchfaces";
+        qCDebug(WatchfaceApplication) << "Watchface::Application initialized with" << m_enabledWatchfaces.size() << "enabled watchfaces";
     }
     else {
-        qDebug() << "Watchface::Application: No enabled watchfaces found";
+        qCDebug(WatchfaceApplication) << "Watchface::Application: No enabled watchfaces found";
     }
 }
 
@@ -40,11 +42,11 @@ void Application::refresh()
 
     if (!m_enabledWatchfaces.isEmpty()) {
         startTimerForCurrentApp();
-        qDebug() << "Watchface::Application refreshed with" << m_enabledWatchfaces.size() << "enabled watchfaces";
+        qCDebug(WatchfaceApplication) << "Watchface::Application refreshed with" << m_enabledWatchfaces.size() << "enabled watchfaces";
     }
     else {
         m_rotationTimer->stop();
-        qDebug() << "Watchface::Application refreshed: No enabled watchfaces found";
+        qCDebug(WatchfaceApplication) << "Watchface::Application refreshed: No enabled watchfaces found";
     }
 
     emit currentAppChanged();

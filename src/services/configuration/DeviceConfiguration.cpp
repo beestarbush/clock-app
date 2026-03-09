@@ -5,6 +5,9 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <algorithm>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(DeviceConfigurationComponent, "DeviceConfigurationComponent")
 
 namespace Services::Configuration
 {
@@ -54,7 +57,7 @@ DeviceConfiguration DeviceConfiguration::fromJson(const QJsonObject& json)
     // Unwrap response envelope if present (e.g. {"status":"success","configuration":{...}})
     QJsonObject configJson = json;
     if (json.contains("configuration") && json["configuration"].isObject()) {
-        qDebug() << "Unwrapping configuration from response envelope";
+        qCDebug(DeviceConfigurationComponent) << "Unwrapping configuration from response envelope";
         configJson = json["configuration"].toObject();
     }
 
@@ -105,14 +108,14 @@ void DeviceConfiguration::saveToFile(const QString& directory) const
 
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly)) {
-        qWarning() << "Failed to save configuration to" << filePath;
+        qCWarning(DeviceConfigurationComponent) << "Failed to save configuration to" << filePath;
         return;
     }
 
     file.write(doc.toJson(QJsonDocument::Indented));
     file.close();
 
-    qDebug() << "Configuration saved to" << filePath;
+    qCDebug(DeviceConfigurationComponent) << "Configuration saved to" << filePath;
 }
 
 DeviceConfiguration DeviceConfiguration::loadFromFile(const QString& directory)
@@ -121,7 +124,7 @@ DeviceConfiguration DeviceConfiguration::loadFromFile(const QString& directory)
 
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "Failed to load configuration from" << filePath;
+        qCWarning(DeviceConfigurationComponent) << "Failed to load configuration from" << filePath;
         return DeviceConfiguration();
     }
 
@@ -130,12 +133,12 @@ DeviceConfiguration DeviceConfiguration::loadFromFile(const QString& directory)
 
     QJsonDocument doc = QJsonDocument::fromJson(data);
     if (doc.isNull() || !doc.isObject()) {
-        qWarning() << "Invalid JSON in configuration file" << filePath;
+        qCWarning(DeviceConfigurationComponent) << "Invalid JSON in configuration file" << filePath;
         return DeviceConfiguration();
     }
 
     DeviceConfiguration config = fromJson(doc.object());
-    qDebug() << "Configuration loaded from" << filePath << "with" << config.applicationCount() << "applications";
+    qCDebug(DeviceConfigurationComponent) << "Configuration loaded from" << filePath << "with" << config.applicationCount() << "applications";
 
     return config;
 }

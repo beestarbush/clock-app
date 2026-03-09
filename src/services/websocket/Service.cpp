@@ -2,8 +2,11 @@
 #include "drivers/network/Driver.h"
 
 #include <QDebug>
+#include <QLoggingCategory>
 #include <QSettings>
 #include <QTimer>
+
+Q_LOGGING_CATEGORY(WebSocketService, "WebSocketService")
 
 using namespace Services::WebSocket;
 
@@ -39,7 +42,7 @@ Service::Service(Drivers::Network::Driver& network, QObject* parent)
         connectToSocket();
     }
     else {
-        qInfo() << "Waiting for network before connecting WebSocket to" << m_serverUrl;
+        qCInfo(WebSocketService) << "Waiting for network before connecting to" << m_serverUrl;
     }
 }
 
@@ -70,9 +73,9 @@ void Service::setServerUrl(const QString& url)
 void Service::request(const Method& method, const QJsonObject& params, ResponseCallback callback)
 {
     if (!m_connected) {
-        qWarning() << "WebSocket not connected. Cannot send request:" << methodToString(method);
+        qCWarning(WebSocketService) << "Disconnected, cannot send request:" << methodToString(method);
         if (callback) {
-            callback(false, QJsonObject(), QStringLiteral("WebSocket not connected"));
+            callback(false, QJsonObject(), QStringLiteral("Disconnected"));
         }
         return;
     }
@@ -91,14 +94,14 @@ void Service::request(const Method& method, const QJsonObject& params, ResponseC
 
     QJsonDocument doc(req);
     QString message = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
-    qInfo() << "WS request:" << message;
+    qCInfo(WebSocketService) << "-> request" << message;
     m_webSocket.sendTextMessage(message);
 }
 
 void Service::publish(const Topic& topic, const QJsonObject& params)
 {
     if (!m_connected) {
-        qWarning() << "WebSocket not connected. Cannot publish to topic:" << topic;
+        qCWarning(WebSocketService) << "Disconnected, cannot publish to topic:" << topic;
         return;
     }
 
@@ -110,7 +113,7 @@ void Service::publish(const Topic& topic, const QJsonObject& params)
 
     QJsonDocument doc(msg);
     QString message = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
-    qInfo() << "WS publish:" << message;
+    qCInfo(WebSocketService) << "-> publish" << message;
     m_webSocket.sendTextMessage(message);
 }
 
@@ -121,7 +124,7 @@ void Service::subscribe(const Topic& topic)
     }
 
     if (!m_connected) {
-        qDebug() << "Will subscribe to" << topic << "when connected";
+        qCDebug(WebSocketService) << "Will subscribe to" << topic << "when connected";
         return;
     }
 
@@ -129,9 +132,9 @@ void Service::subscribe(const Topic& topic)
     params["topic"] = topicToString(topic);
     request(Method::Subscribe, params, [topic](bool success, const QJsonObject&, const QString& error) {
         if (success) {
-            qInfo() << "Subscribed to topic:" << topic;
+            qCInfo(WebSocketService) << "Subscribed to topic:" << topic;
         } else {
-            qWarning() << "Failed to subscribe to" << topic << ":" << error;
+            qCWarning(WebSocketService) << "Failed to subscribe to" << topic << ":" << error;
         }
     });
 }
@@ -148,9 +151,9 @@ void Service::unsubscribe(const Topic& topic)
     params["topic"] = topicToString(topic);
     request(Method::Unsubscribe, params, [topic](bool success, const QJsonObject&, const QString& error) {
         if (success) {
-            qInfo() << "Unsubscribed from topic:" << topic;
+            qCInfo(WebSocketService) << "Unsubscribed from topic:" << topic;
         } else {
-            qWarning() << "Failed to unsubscribe from" << topic << ":" << error;
+            qCWarning(WebSocketService) << "Failed to unsubscribe from" << topic << ":" << error;
         }
     });
 }
@@ -161,7 +164,7 @@ void Service::connectToSocket()
     if (m_webSocket.state() == QAbstractSocket::ConnectedState ||
         m_webSocket.state() == QAbstractSocket::ConnectingState) return;
 
-    qDebug() << "Connecting WebSocket to" << m_serverUrl;
+    qCDebug(WebSocketService) << "Connecting to" << m_serverUrl;
     m_webSocket.open(QUrl(m_serverUrl));
 }
 
@@ -172,7 +175,7 @@ void Service::disconnectFromSocket()
 
 void Service::onConnected()
 {
-    qInfo() << "WebSocket Connected";
+    qCInfo(WebSocketService) << "Connected!";
     m_connected = true;
     emit connectedChanged();
 
@@ -182,12 +185,12 @@ void Service::onConnected()
 
 void Service::onDisconnected()
 {
-    qInfo() << "WebSocket Disconnected, TODO: raise notification that internal communication failed.";
+    qCInfo(WebSocketService) << "Disconnected, TODO: raise notification that internal communication failed.";
 
     // Clear pending requests — they will never get a response
     for (auto it = m_pendingRequests.begin(); it != m_pendingRequests.end(); ++it) {
         if (it.value()) {
-            it.value()(false, QJsonObject(), QStringLiteral("WebSocket disconnected"));
+            it.value()(false, QJsonObject(), QStringLiteral("Disconnected"));
         }
     }
     m_pendingRequests.clear();
@@ -204,7 +207,7 @@ void Service::onDisconnected()
 
 void Service::onError(QAbstractSocket::SocketError error)
 {
-     qWarning() << "WebSocket Error:" << error << m_webSocket.errorString();
+     qCWarning(WebSocketService) << "Error:" << error << m_webSocket.errorString();
 }
 
 void Service::onTextMessageReceived(const QString& message)
@@ -213,13 +216,14 @@ void Service::onTextMessageReceived(const QString& message)
     if (doc.isObject()) {
         dispatchMessage(doc.object());
     } else {
-        qWarning() << "Received invalid JSON via WebSocket:" << message;
+        qCWarning(WebSocketService) << "Received invalid JSON:" << message;
     }
 }
 
 void Service::dispatchMessage(const QJsonObject& message)
 {
-    qInfo() << "WS dispatchMessage:" << QString::fromUtf8(QJsonDocument(message).toJson(QJsonDocument::Compact));
+    QString messageStr = QString::fromUtf8(QJsonDocument(message).toJson(QJsonDocument::Compact));
+    qCInfo(WebSocketService) << "<- response/publish" << messageStr;
     MessageType type = messageTypeFromString(message["type"].toString());
 
     if (type == MessageType::Response) {
@@ -235,7 +239,7 @@ void Service::dispatchMessage(const QJsonObject& message)
                 callback(true, result, QString());
             }
         } else {
-            qDebug() << "Received response for unknown request id:" << id;
+            qCDebug(WebSocketService) << "Received response for unknown request id:" << id;
         }
     }
     else if (type == MessageType::Publish) {
@@ -245,7 +249,7 @@ void Service::dispatchMessage(const QJsonObject& message)
         emit publishReceived(topic, data);
     }
     else {
-        qWarning() << "Unknown message type received:" << type;
+        qCWarning(WebSocketService) << "Unknown message type received:" << type;
     }
 }
 
@@ -256,9 +260,9 @@ void Service::resubscribeAll()
         params["topic"] = topicToString(topic);
         request(Method::Subscribe, params, [topic](bool success, const QJsonObject&, const QString& error) {
             if (success) {
-                qInfo() << "Subscribed to topic:" << topicToString(topic);
+                qCInfo(WebSocketService) << "Subscribed to topic:" << topicToString(topic);
             } else {
-                qWarning() << "Failed to subscribe to" << topicToString(topic) << ":" << error;
+                qCWarning(WebSocketService) << "Failed to subscribe to" << topicToString(topic) << ":" << error;
             }
         });
     }

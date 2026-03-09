@@ -8,6 +8,11 @@
 #include "Item.h"
 #include "Model.h"
 
+namespace Services::WebSocket
+{
+class Service;
+}
+
 namespace Applications::Menu
 {
 class Application : public QObject
@@ -23,10 +28,12 @@ class Application : public QObject
     {
         MainMenu = 0,
         MainBrightness = 1,
-        MainCustomize = 2,
-        MainNotifications = 3,
-        MainVersion = 4,
-        MainMenuCount = 5
+        MainVolume = 2,
+        MainCustomize = 3,
+        MainNotifications = 4,
+        MainVersion = 5,
+        MainPowerOff = 6,
+        MainMenuCount = 7
     };
     Q_ENUM(MainMenuItem)
 
@@ -36,13 +43,15 @@ class Application : public QObject
         None,
         Version,
         ScreenBrightness,
+        Volume,
         Customize,
         Notifications,
-        DialWheel
+        DialWheel,
+        PowerOff
     };
     Q_ENUM(DialogType)
 
-    Application(QObject* parent = nullptr);
+    Application(Services::WebSocket::Service& websocket, QObject* parent = nullptr);
 
     Menu::Model* main();
 
@@ -52,6 +61,7 @@ class Application : public QObject
     Q_INVOKABLE void showDialog(DialogType type, int param = -1);
     Q_INVOKABLE void closeDialog();
     Q_INVOKABLE void dialWheelValueChanged(int value);
+    Q_INVOKABLE void shutdown();
 
   signals:
     void dialogChanged();
@@ -64,6 +74,8 @@ class Application : public QObject
 
     DialogType m_dialog;
     int m_dialogParam;
+
+    Services::WebSocket::Service& m_websocket;
 
     // Store menu items to manage lifetime - sized using enum counts
     Menu::Item m_mainItems[MainMenuCount];

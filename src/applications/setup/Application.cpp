@@ -2,10 +2,16 @@
 #include "applications/common/Application.h"
 #include "applications/common/Configuration.h"
 #include "services/configuration/Service.h"
+#include "services/configuration/DeviceConfiguration.h"
+#include "services/websocket/Service.h"
 #include <QDate>
 #include <QDebug>
 #include <QJsonObject>
 #include <QSettings>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(SetupApplication, "SetupApplication")
+
 using namespace Applications::Setup;
 
 const QString PROPERTIES_GROUP_NAME = QStringLiteral("setup");
@@ -21,12 +27,17 @@ const QString PROPERTY_BASE_COLOR_KEY = QStringLiteral("base-color");
 const QColor PROPERTY_BASE_COLOR_DEFAULT = QColor("#000000");
 const QString PROPERTY_ACCENT_COLOR_KEY = QStringLiteral("accent-color");
 const QColor PROPERTY_ACCENT_COLOR_DEFAULT = QColor("#02996c");
+const QString PROPERTY_BRIGHTNESS_KEY = QStringLiteral("brightness");
+const int PROPERTY_BRIGHTNESS_DEFAULT = 50;
+const QString PROPERTY_VOLUME_KEY = QStringLiteral("volume");
+const int PROPERTY_VOLUME_DEFAULT = 50;
 
 const QString PROPERTY_DEVICE_ID_KEY = QStringLiteral("device-id");
 const QString PROPERTY_DEVICE_ID_DEFAULT = QStringLiteral("SN-XXXX");
 
 Application::Application(Common::DynamicApplicationMap& applications,
                          Services::Configuration::Service& configurationService,
+                         Services::WebSocket::Service& webSocket,
                          QObject* parent)
     : QObject(parent),
       m_setupComplete(PROPERTY_SETUP_COMPLETE_DEFAULT),
@@ -38,11 +49,14 @@ Application::Application(Common::DynamicApplicationMap& applications,
       m_applications(applications),
       m_currentAppIndex(0),
       m_configurationService(configurationService),
+      m_webSocket(webSocket),
       m_pendulumBobColor(PROPERTY_PENDULUM_BOB_COLOR_DEFAULT),
       m_pendulumRodColor(PROPERTY_PENDULUM_ROD_COLOR_DEFAULT),
       m_pendulumBackgroundColor(PROPERTY_PENDULUM_BACKGROUND_COLOR_DEFAULT),
       m_baseColor(PROPERTY_BASE_COLOR_DEFAULT),
-      m_accentColor(PROPERTY_ACCENT_COLOR_DEFAULT)
+      m_accentColor(PROPERTY_ACCENT_COLOR_DEFAULT),
+      m_brightness(PROPERTY_BRIGHTNESS_DEFAULT),
+      m_volume(PROPERTY_VOLUME_DEFAULT)
 {
     loadProperties();
 }
@@ -62,7 +76,16 @@ void Application::setDeviceId(const QString& id)
     if (m_deviceId == id) return;
 
     m_deviceId = id;
-    saveProperty(PROPERTY_DEVICE_ID_KEY, id);
+    
+    // Send device ID update to backend
+    QJsonObject params;
+    params["device_id"] = id;
+    m_webSocket.request(Services::WebSocket::Method::SetDeviceId, params, [](bool success, const QJsonObject&, const QString& error) {
+        if (!success) {
+            qCWarning(SetupApplication) << "Failed to set device ID:" << error;
+        }
+    });
+    
     emit deviceIdChanged();
 }
 
@@ -219,7 +242,8 @@ void Application::loadProperties()
     static QSettings settings;
     settings.beginGroup(PROPERTIES_GROUP_NAME);
     m_setupComplete = settings.value(PROPERTY_SETUP_COMPLETE_KEY, PROPERTY_SETUP_COMPLETE_DEFAULT).toBool();
-    m_deviceId = settings.value(PROPERTY_DEVICE_ID_KEY, PROPERTY_DEVICE_ID_DEFAULT).toString();
+    // Device ID is now loaded from backend configuration, not from QSettings
+    m_deviceId = PROPERTY_DEVICE_ID_DEFAULT;
     settings.endGroup();
 }
 
@@ -458,6 +482,50 @@ void Application::setAccentColor(const QColor& color)
     emit accentColorChanged();
 }
 
+int Application::brightness() const
+{
+    return m_brightness;
+}
+
+void Application::setBrightness(int value)
+{
+    if (m_brightness == value) {
+        return;
+    }
+
+    QJsonObject params;
+    params["value"] = value;
+
+    m_webSocket.request(Services::WebSocket::Method::SetBrightness, params, [](bool, const QJsonObject&, const QString&) {
+        // fire-and-forget passthrough
+    });
+
+    m_brightness = value;
+    emit brightnessChanged();
+}
+
+int Application::volume() const
+{
+    return m_volume;
+}
+
+void Application::setVolume(int value)
+{
+    if (m_volume == value) {
+        return;
+    }
+
+    QJsonObject params;
+    params["value"] = value;
+
+    m_webSocket.request(Services::WebSocket::Method::SetVolume, params, [](bool, const QJsonObject&, const QString&) {
+        // fire-and-forget passthrough
+    });
+
+    m_volume = value;
+    emit volumeChanged();
+}
+
 void Application::applySystemConfiguration(const QJsonObject& systemConfig)
 {
     if (systemConfig.contains(PROPERTY_PENDULUM_BOB_COLOR_KEY)) {
@@ -475,6 +543,12 @@ void Application::applySystemConfiguration(const QJsonObject& systemConfig)
     if (systemConfig.contains(PROPERTY_ACCENT_COLOR_KEY)) {
         setAccentColor(QColor(systemConfig[PROPERTY_ACCENT_COLOR_KEY].toString()));
     }
+    if (systemConfig.contains(PROPERTY_BRIGHTNESS_KEY)) {
+        setBrightness(systemConfig[PROPERTY_BRIGHTNESS_KEY].toInt());
+    }
+    if (systemConfig.contains(PROPERTY_VOLUME_KEY)) {
+        setVolume(systemConfig[PROPERTY_VOLUME_KEY].toInt());
+    }
 }
 
 QJsonObject Application::buildSystemConfiguration() const
@@ -485,5 +559,19 @@ QJsonObject Application::buildSystemConfiguration() const
     systemConfig[PROPERTY_PENDULUM_BACKGROUND_COLOR_KEY] = m_pendulumBackgroundColor.name();
     systemConfig[PROPERTY_BASE_COLOR_KEY] = m_baseColor.name();
     systemConfig[PROPERTY_ACCENT_COLOR_KEY] = m_accentColor.name();
+    systemConfig[PROPERTY_BRIGHTNESS_KEY] = m_brightness;
+    systemConfig[PROPERTY_VOLUME_KEY] = m_volume;
     return systemConfig;
+}
+
+void Application::applyDeviceConfiguration(const Services::Configuration::DeviceConfiguration& config)
+{
+    // Update device ID from the backend configuration
+    if (!config.deviceId.isEmpty() && m_deviceId != config.deviceId) {
+        m_deviceId = config.deviceId;
+        emit deviceIdChanged();
+    }
+
+    // Apply system configuration
+    applySystemConfiguration(config.systemConfiguration);
 }

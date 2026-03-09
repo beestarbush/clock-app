@@ -1,6 +1,10 @@
 
 #include "RoundAnimatedImage.h"
 #include <QPainterPath>
+#include <QDebug>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(RoundAnimatedImageComponent, "RoundAnimatedImageComponent")
 
 RoundAnimatedImage::RoundAnimatedImage(QQuickItem* parent)
     : QQuickPaintedItem(parent),
@@ -51,7 +55,7 @@ void RoundAnimatedImage::setSource(const QString& path)
 
     m_movie = new QMovie(actualPath);
     if (!m_movie->isValid()) {
-        qWarning() << "Invalid movie source:" << actualPath;
+        qCWarning(RoundAnimatedImageComponent) << "Invalid movie source:" << actualPath;
         delete m_movie;
         m_movie = nullptr;
         update(); // Clear the display

@@ -17,4 +17,6 @@ qt_add_resources(ResourcesLib "icons"
 		Icons/version.svg
 		Icons/brightness.svg
 		Icons/wizard.svg
+		Icons/speaker.svg
+		Icons/power-off.svg
 )

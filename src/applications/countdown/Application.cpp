@@ -46,4 +46,3 @@ void Application::calculateTime()
 
     emit timeChanged();
 }
-

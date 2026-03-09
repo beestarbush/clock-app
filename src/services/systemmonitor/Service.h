@@ -16,10 +16,6 @@ namespace Services::Notification
 {
 class Service;
 }
-namespace Drivers::System
-{
-class Driver;
-}
 
 namespace Services::SystemMonitor
 {
@@ -36,7 +32,6 @@ class Service : public QObject
 
   public:
     explicit Service(Services::WebSocket::Service& webSocket,
-                     Drivers::System::Driver& system,
                      Services::Version::Service& version,
                      Services::Notification::Service& notificationManager,
                      QObject* parent = nullptr);
@@ -47,7 +42,6 @@ class Service : public QObject
     void onTemperatureReceived(const QJsonObject& data);
 
     Services::WebSocket::Service& m_webSocket;
-    Drivers::System::Driver& m_system;
     Services::Version::Service& m_version;
     Services::Notification::Service& m_notificationManager;
 

@@ -4,6 +4,9 @@
 #include <QDebug>
 #include <QSettings>
 #include <QTimer>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(RestService, "RestService")
 
 using namespace Services::Rest;
 

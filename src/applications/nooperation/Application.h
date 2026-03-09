@@ -1,5 +1,5 @@
-#ifndef APPS_PHOTOFRAME_H
-#define APPS_PHOTOFRAME_H
+#ifndef APPS_NOOPERATION_H
+#define APPS_NOOPERATION_H
 
 #include "applications/common/Application.h"
 #include "applications/common/Configuration.h"
@@ -10,7 +10,7 @@ namespace Services::Media
 class Service;
 }
 
-namespace Applications::PhotoFrame
+namespace Applications::NoOperation
 {
 class Application : public Common::Application
 {
@@ -28,6 +28,6 @@ class Application : public Common::Application
     Common::Configuration* m_configuration;
     Services::Media::Service& m_media;
 };
-} // namespace Applications::PhotoFrame
+} // namespace Applications::NoOperation
 
-#endif // APPS_PHOTOFRAME_H
+#endif // APPS_NOOPERATION_H

@@ -77,6 +77,27 @@ Item {
 	readonly property string roundProgressBarPanelWeeksLabel: qsTr("weken")
 	readonly property string roundProgressBarPanelNotSetup: qsTr("Timer not set up yet")
 
+	// Date display panel
+	readonly property string dateDisplayPanelMonday: qsTr("maandag")
+	readonly property string dateDisplayPanelTuesday: qsTr("dinsdag")
+	readonly property string dateDisplayPanelWednesday: qsTr("woensdag")
+	readonly property string dateDisplayPanelThursday: qsTr("donderdag")
+	readonly property string dateDisplayPanelFriday: qsTr("vrijdag")
+	readonly property string dateDisplayPanelSaturday: qsTr("zaterdag")
+	readonly property string dateDisplayPanelSunday: qsTr("zondag")
+	readonly property string dateDisplayPanelJanuary: qsTr("januari")
+	readonly property string dateDisplayPanelFebruary: qsTr("februari")
+	readonly property string dateDisplayPanelMarch: qsTr("maart")
+	readonly property string dateDisplayPanelApril: qsTr("april")
+	readonly property string dateDisplayPanelMay: qsTr("mei")
+	readonly property string dateDisplayPanelJune: qsTr("juni")
+	readonly property string dateDisplayPanelJuly: qsTr("juli")
+	readonly property string dateDisplayPanelAugust: qsTr("augustus")
+	readonly property string dateDisplayPanelSeptember: qsTr("september")
+	readonly property string dateDisplayPanelOctober: qsTr("oktober")
+	readonly property string dateDisplayPanelNovember: qsTr("november")
+	readonly property string dateDisplayPanelDecember: qsTr("december")
+
 	// Seven segment panel
 	readonly property string sevenSegmentPanelNotSetup: qsTr("Timer not set up yet")
 
@@ -89,6 +110,10 @@ Item {
 	// Customize dialog
 	readonly property string customizeDialogScanQrCodeText: qsTr("Scan to customize clock")
 	readonly property string customizeDialogNoNetworkText: qsTr("Connect to a network to customize the clock.")
+
+	// Power off dialog
+	readonly property string powerOffDialogHoldText: qsTr("Hold to power off")
+	readonly property string powerOffDialogShuttingDownText: qsTr("Powering off...")
 
 	// Watchfaces panel
 	readonly property string watchfacesPanelNotSetup: qsTr("System not configured")

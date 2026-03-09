@@ -1,6 +1,8 @@
 #include "TimerApplication.h"
 #include "services/media/Service.h"
-#include <QDebug>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(TimerApplicationLog, "TimerApplication")
 
 using namespace Common;
 
@@ -35,13 +37,13 @@ Common::TimerConfiguration* TimerApplication::configuration() const
 void TimerApplication::applyConfiguration(const Common::TimerConfiguration& configuration)
 {
     *m_configuration = configuration;
-    qDebug() << metaObject()->className() << "configuration:" << *m_configuration;
+    qCDebug(TimerApplicationLog) << metaObject()->className() << "configuration:" << *m_configuration;
 }
 
 void TimerApplication::applyConfiguration(const QJsonObject& configuration)
 {
     m_configuration->fromJson(configuration);
-    qDebug() << metaObject()->className() << "configuration:" << *m_configuration;
+    qCDebug(TimerApplicationLog) << metaObject()->className() << "configuration:" << *m_configuration;
 }
 
 void TimerApplication::startTimer()
