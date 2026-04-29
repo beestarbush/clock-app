@@ -16,6 +16,10 @@
 namespace Services
 {
 class Container;
+namespace Audio
+{
+class Service;
+}
 namespace Configuration
 {
 class Service;
@@ -58,8 +62,8 @@ class Container : public QObject
     void setReloading(bool reloading);
 
     // Factory method
-    Common::Application* createApplication(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::DateTime::Service& dateTime);
-    void reload(Services::Configuration::Service& configuration, Services::Media::Service& media, Services::DateTime::Service& dateTime);
+    Common::Application* createApplication(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime);
+    void reload(Services::Configuration::Service& configuration, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime);
 
   private:
     bool m_reloading = true;

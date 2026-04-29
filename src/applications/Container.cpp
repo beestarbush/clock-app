@@ -18,13 +18,13 @@ Container::Container(Services::Container& services, QObject* parent)
 {
     connect(services.m_configuration, &Services::Configuration::Service::configurationChanged, this, [this, &services]() {
         qCInfo(ApplicationContainer) << "Configuration changed, reloading applications";
-        reload(*services.m_configuration, *services.m_media, *services.m_dateTime);
+        reload(*services.m_configuration, *services.m_media, *services.m_audio, *services.m_dateTime);
     });
 
     // When startup check is already completed, reload immediately to apply initial configuration (if any present).
     if (!services.m_configuration->startupCheckInProgress() &&
         !services.m_media->startupCheckInProgress()) {
-        reload(*services.m_configuration, *services.m_media, *services.m_dateTime);
+        reload(*services.m_configuration, *services.m_media, *services.m_audio, *services.m_dateTime);
     }
 
     auto notification = services.m_notification;
@@ -44,7 +44,7 @@ void Container::setReloading(bool reloading)
     }
 }
 
-void Container::reload(Services::Configuration::Service& configuration, Services::Media::Service& media, Services::DateTime::Service& dateTime)
+void Container::reload(Services::Configuration::Service& configuration, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime)
 {
     setReloading(true);
 
@@ -91,7 +91,7 @@ void Container::reload(Services::Configuration::Service& configuration, Services
         }
 
         // Create application
-        Common::Application* app = createApplication(id, type, displayName, order, watchface, media, dateTime);
+        Common::Application* app = createApplication(id, type, displayName, order, watchface, media, audio, dateTime);
         if (app) {
             app->applyConfiguration(appConfig);
             m_applications[id] = app;
@@ -106,16 +106,16 @@ void Container::reload(Services::Configuration::Service& configuration, Services
     setReloading(false);
 }
 
-Common::Application* Container::createApplication(const QString& id, const Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::DateTime::Service& dateTime)
+Common::Application* Container::createApplication(const QString& id, const Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime)
 {
     if (type == Common::Type::Clock) {
-        return new Clock::Application(id, type, displayName, order, watchface, media, this);
+        return new Clock::Application(id, type, displayName, order, watchface, media, audio, this);
     }
     else if (type == Common::Type::TimeElapsed) {
-        return new TimeElapsed::Application(id, type, displayName, order, watchface, media, this);
+        return new TimeElapsed::Application(id, type, displayName, order, watchface, media, audio, this);
     }
     else if (type == Common::Type::Countdown) {
-        return new Countdown::Application(id, type, displayName, order, watchface, media, this);
+        return new Countdown::Application(id, type, displayName, order, watchface, media, audio, this);
     }
     else if (type == Common::Type::NoOperation) {
         return new NoOperation::Application(id, type, displayName, order, watchface, media, this);

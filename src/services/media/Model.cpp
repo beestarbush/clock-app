@@ -105,14 +105,14 @@ void Model::setMedia(const QList<Item*>& items)
     // Add new items
     beginInsertRows(QModelIndex(), 0, items.size() - 1);
     m_items = items;
-    
+
     // Reparent items to this model to ensure cleanup
     for (Item* item : m_items) {
         if (item) {
             item->setParent(this);
         }
     }
-    
+
     endInsertRows();
 
     emit countChanged();
@@ -120,7 +120,8 @@ void Model::setMedia(const QList<Item*>& items)
 
 void Model::addItem(Item* item)
 {
-    if (!item) return;
+    if (!item)
+        return;
 
     int row = m_items.size();
     beginInsertRows(QModelIndex(), row, row);
@@ -134,7 +135,8 @@ void Model::addItem(Item* item)
 void Model::removeItem(const QString& filename)
 {
     int row = indexOf(filename);
-    if (row < 0) return;
+    if (row < 0)
+        return;
 
     beginRemoveRows(QModelIndex(), row, row);
     Item* item = m_items.takeAt(row);

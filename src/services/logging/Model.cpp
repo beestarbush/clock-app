@@ -2,7 +2,8 @@
 
 namespace Services::Logging
 {
-namespace {
+namespace
+{
 constexpr int MAX_LOG_ENTRIES = 1000;
 }
 

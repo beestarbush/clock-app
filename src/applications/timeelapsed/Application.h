@@ -11,6 +11,11 @@ namespace Services::Media
 class Service;
 }
 
+namespace Services::Audio
+{
+class Service;
+}
+
 namespace Applications::TimeElapsed
 {
 class Application : public Common::Application
@@ -26,7 +31,7 @@ class Application : public Common::Application
     Q_PROPERTY(quint64 seconds READ seconds NOTIFY timeChanged)
 
   public:
-    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, QObject* parent = nullptr);
+    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, QObject* parent = nullptr);
 
     Common::TimerConfiguration* configuration() const override;
 
@@ -66,6 +71,8 @@ class Application : public Common::Application
 
     Common::TimerConfiguration* m_configuration;
     Services::Media::Service& m_media;
+    Services::Audio::Service& m_audio;
+    quint64 m_lastMilestoneHour;
 
     // Properties for indicating the elapsed time
     quint64 m_years;

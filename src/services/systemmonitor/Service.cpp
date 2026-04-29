@@ -1,9 +1,9 @@
 #include "Service.h"
 #include "git_version.h"
 #include "services/notification/Service.h"
+#include "services/version/Service.h"
 #include "services/websocket/Service.h"
 #include "services/websocket/Types.h"
-#include "services/version/Service.h"
 
 #include <QDebug>
 #include <QJsonObject>
@@ -29,12 +29,11 @@ Service::Service(Services::WebSocket::Service& webSocket,
 {
     // Subscribe to temperature data from backend
     m_webSocket.subscribe(Services::WebSocket::Topic::Temperature);
-    connect(&m_webSocket, &Services::WebSocket::Service::publishReceived,
-        this, [this](const Services::WebSocket::Topic& topic, const QJsonObject& data) {
-            if (topic == Services::WebSocket::Topic::Temperature) {
-                onTemperatureReceived(data);
-            }
-        });
+    connect(&m_webSocket, &Services::WebSocket::Service::publishReceived, this, [this](const Services::WebSocket::Topic& topic, const QJsonObject& data) {
+        if (topic == Services::WebSocket::Topic::Temperature) {
+            onTemperatureReceived(data);
+        }
+    });
 
     // Configure monitor timer (temperature checks etc.)
     m_monitorTimer.setSingleShot(false);
@@ -58,7 +57,8 @@ Service::Service(Services::WebSocket::Service& webSocket,
             });
             report();
             m_reportTimer.start();
-        } else {
+        }
+        else {
             m_reportTimer.stop();
         }
     });

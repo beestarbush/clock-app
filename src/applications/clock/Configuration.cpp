@@ -9,12 +9,18 @@ const QString PROPERTY_MINUTE_COLOR_KEY = QStringLiteral("minute-color");
 const QColor PROPERTY_MINUTE_COLOR_DEFAULT = QColor("#005099");
 const QString PROPERTY_SECOND_COLOR_KEY = QStringLiteral("second-color");
 const QColor PROPERTY_SECOND_COLOR_DEFAULT = QColor("#009950");
+const QString PROPERTY_TICK_SOUND_FILE_KEY = QStringLiteral("tick-sound-file");
+const QString PROPERTY_TICK_SOUND_FILE_DEFAULT = QStringLiteral("tick.wav");
+const QString PROPERTY_HOURLY_CHIME_SOUND_FILE_KEY = QStringLiteral("hourly-chime-sound-file");
+const QString PROPERTY_HOURLY_CHIME_SOUND_FILE_DEFAULT = QStringLiteral("hourly-chime.wav");
 
 Configuration::Configuration(QString name, QObject* parent)
     : Common::Configuration(name, parent),
       m_hourColor(PROPERTY_HOUR_COLOR_DEFAULT),
       m_minuteColor(PROPERTY_MINUTE_COLOR_DEFAULT),
-      m_secondColor(PROPERTY_SECOND_COLOR_DEFAULT)
+      m_secondColor(PROPERTY_SECOND_COLOR_DEFAULT),
+      m_tickSoundFile(PROPERTY_TICK_SOUND_FILE_DEFAULT),
+      m_hourlyChimeSoundFile(PROPERTY_HOURLY_CHIME_SOUND_FILE_DEFAULT)
 {
 }
 
@@ -24,6 +30,8 @@ QJsonObject Configuration::toJson() const
     json[PROPERTY_HOUR_COLOR_KEY] = m_hourColor.name();
     json[PROPERTY_MINUTE_COLOR_KEY] = m_minuteColor.name();
     json[PROPERTY_SECOND_COLOR_KEY] = m_secondColor.name();
+    json[PROPERTY_TICK_SOUND_FILE_KEY] = m_tickSoundFile;
+    json[PROPERTY_HOURLY_CHIME_SOUND_FILE_KEY] = m_hourlyChimeSoundFile;
 
     return json;
 }
@@ -40,6 +48,12 @@ void Configuration::fromJson(const QJsonObject& json)
     }
     if (json.contains(PROPERTY_SECOND_COLOR_KEY)) {
         setSecondColor(QColor(json[PROPERTY_SECOND_COLOR_KEY].toString()));
+    }
+    if (json.contains(PROPERTY_TICK_SOUND_FILE_KEY)) {
+        setTickSoundFile(json[PROPERTY_TICK_SOUND_FILE_KEY].toString());
+    }
+    if (json.contains(PROPERTY_HOURLY_CHIME_SOUND_FILE_KEY)) {
+        setHourlyChimeSoundFile(json[PROPERTY_HOURLY_CHIME_SOUND_FILE_KEY].toString());
     }
 }
 
@@ -88,6 +102,36 @@ void Configuration::setSecondColor(const QColor& secondColor)
     emit secondColorChanged();
 }
 
+QString Configuration::tickSoundFile() const
+{
+    return m_tickSoundFile;
+}
+
+void Configuration::setTickSoundFile(const QString& tickSoundFile)
+{
+    if (m_tickSoundFile == tickSoundFile) {
+        return;
+    }
+
+    m_tickSoundFile = tickSoundFile;
+    emit tickSoundFileChanged();
+}
+
+QString Configuration::hourlyChimeSoundFile() const
+{
+    return m_hourlyChimeSoundFile;
+}
+
+void Configuration::setHourlyChimeSoundFile(const QString& hourlyChimeSoundFile)
+{
+    if (m_hourlyChimeSoundFile == hourlyChimeSoundFile) {
+        return;
+    }
+
+    m_hourlyChimeSoundFile = hourlyChimeSoundFile;
+    emit hourlyChimeSoundFileChanged();
+}
+
 Configuration& Configuration::operator=(const Configuration& other)
 {
     if (this != &other) {
@@ -97,6 +141,8 @@ Configuration& Configuration::operator=(const Configuration& other)
         setHourColor(other.m_hourColor);
         setMinuteColor(other.m_minuteColor);
         setSecondColor(other.m_secondColor);
+        setTickSoundFile(other.m_tickSoundFile);
+        setHourlyChimeSoundFile(other.m_hourlyChimeSoundFile);
     }
     return *this;
 }
@@ -112,7 +158,9 @@ QDebug operator<<(QDebug debug, const Configuration& config)
     debug.nospace() << "Clock: (\n"
                     << " - hourColor=" << config.hourColor() << "\n"
                     << " - minuteColor=" << config.minuteColor() << "\n"
-                    << " - secondColor=" << config.secondColor() << ")";
+                    << " - secondColor=" << config.secondColor() << "\n"
+                    << " - tickSoundFile=" << config.tickSoundFile() << "\n"
+                    << " - hourlyChimeSoundFile=" << config.hourlyChimeSoundFile() << ")";
     return debug;
 }
 } // namespace Applications::Clock

@@ -19,8 +19,8 @@ const QString MEDIA_PATH = QStringLiteral("./media");
 const QString MEDIA_PATH = QStringLiteral("/workdir/build/bee/media");
 #endif
 const QString DEFAULT_MEDIA = QStringLiteral("qrc:/media/default.gif");
-constexpr int MIN_MEDIA_FILE_SIZE = 50;         // Minimum reasonable file size in bytes
-constexpr int INITIAL_SYNC_DELAY_MS = 5000;     // 5 seconds
+constexpr int MIN_MEDIA_FILE_SIZE = 50;     // Minimum reasonable file size in bytes
+constexpr int INITIAL_SYNC_DELAY_MS = 5000; // 5 seconds
 
 Service::Service(Services::WebSocket::Service& webSocket, Services::Rest::Service& rest, QObject* parent)
     : QObject(parent),
@@ -40,13 +40,14 @@ Service::Service(Services::WebSocket::Service& webSocket, Services::Rest::Servic
     });
     connect(&m_webSocket, &Services::WebSocket::Service::connectedChanged, this, [this]() {
         if (m_webSocket.connected()) {
-             m_webSocket.request(Services::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
-                 if (success) {
-                     onMediaReceived(result);
-                 } else {
-                     qCWarning(MediaService) << "Failed to get media:" << error;
-                 }
-             });
+            m_webSocket.request(Services::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+                if (success) {
+                    onMediaReceived(result);
+                }
+                else {
+                    qCWarning(MediaService) << "Failed to get media:" << error;
+                }
+            });
         }
     });
 
@@ -121,7 +122,7 @@ void Service::onMediaReceived(const QJsonObject& data)
     qCInfo(MediaService) << "Received media notification from backend";
     if (data.isEmpty()) {
         qCWarning(MediaService) << "Received empty media data";
-         return;
+        return;
     }
 
     setSyncing(true);
@@ -175,9 +176,12 @@ void Service::syncWithServerFiles(const QStringList& serverFilenames)
             QFileInfo fileInfo(filePath);
             QString suffix = fileInfo.suffix().toLower();
             QString type = "unknown";
-            if (suffix == "gif") type = "image/gif";
-            else if (suffix == "png") type = "image/png";
-            else if (suffix == "jpg" || suffix == "jpeg") type = "image/jpeg";
+            if (suffix == "gif")
+                type = "image/gif";
+            else if (suffix == "png")
+                type = "image/png";
+            else if (suffix == "jpg" || suffix == "jpeg")
+                type = "image/jpeg";
 
             if (!m_model.contains(file)) {
                 m_model.addItem(new Item(file, file, filePath, type, fileInfo.size(), nullptr));
@@ -208,8 +212,10 @@ void Service::downloadMedia(const QString& filename)
         if (!success) {
             qCWarning(MediaService) << "Failed to download" << filename << ":" << error;
             if (m_pendingDownloads.isEmpty()) {
-                if (m_lastError.isEmpty()) completeSyncWithSuccess();
-                else completeSyncWithError("Some downloads failed");
+                if (m_lastError.isEmpty())
+                    completeSyncWithSuccess();
+                else
+                    completeSyncWithError("Some downloads failed");
             }
             return;
         }
@@ -225,12 +231,16 @@ void Service::downloadMedia(const QString& filename)
             QFileInfo fileInfo(filePath);
             QString suffix = fileInfo.suffix().toLower();
             QString type = "unknown";
-            if (suffix == "gif") type = "image/gif";
-            else if (suffix == "png") type = "image/png";
-            else if (suffix == "jpg" || suffix == "jpeg") type = "image/jpeg";
+            if (suffix == "gif")
+                type = "image/gif";
+            else if (suffix == "png")
+                type = "image/png";
+            else if (suffix == "jpg" || suffix == "jpeg")
+                type = "image/jpeg";
 
             m_model.addItem(new Item(filename, filename, filePath, type, fileInfo.size(), nullptr));
-        } else {
+        }
+        else {
             qCWarning(MediaService) << "Failed to write downloaded file:" << filePath;
         }
 
@@ -303,8 +313,8 @@ void Service::performStartupCheck()
 
     // Otherwise wait for the connection
     qCInfo(MediaService) << "Media: Waiting for WebSocket connection (max" << INITIAL_SYNC_DELAY_MS << "ms)...";
-    
-     m_startupConnectionWatcher = connect(&m_webSocket,
+
+    m_startupConnectionWatcher = connect(&m_webSocket,
                                          &Services::WebSocket::Service::connectedChanged,
                                          this,
                                          [this]() {
@@ -313,7 +323,8 @@ void Service::performStartupCheck()
                                                  m_webSocket.request(Services::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
                                                      if (success) {
                                                          onMediaReceived(result);
-                                                     } else {
+                                                     }
+                                                     else {
                                                          completeSyncWithError("Failed to fetch media list: " + error);
                                                      }
                                                  });

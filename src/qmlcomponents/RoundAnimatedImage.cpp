@@ -1,8 +1,8 @@
 
 #include "RoundAnimatedImage.h"
-#include <QPainterPath>
 #include <QDebug>
 #include <QLoggingCategory>
+#include <QPainterPath>
 
 Q_LOGGING_CATEGORY(RoundAnimatedImageComponent, "RoundAnimatedImageComponent")
 

@@ -4,8 +4,8 @@
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
-#include <algorithm>
 #include <QLoggingCategory>
+#include <algorithm>
 
 Q_LOGGING_CATEGORY(DeviceConfigurationComponent, "DeviceConfigurationComponent")
 
@@ -91,7 +91,7 @@ DeviceConfiguration DeviceConfiguration::fromJson(const QJsonObject& json)
 bool DeviceConfiguration::isValid() const
 {
     // Basic validation
-    return !version.isEmpty(); 
+    return !version.isEmpty();
 }
 
 void DeviceConfiguration::saveToFile(const QString& directory) const

@@ -38,7 +38,8 @@ Service::Service(Services::WebSocket::Service& webSocket, QObject* parent)
             m_webSocket.request(Services::WebSocket::Method::GetConfig, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
                 if (success) {
                     onConfigurationReceived(result);
-                } else {
+                }
+                else {
                     qCWarning(ConfigurationService) << "Failed to get config:" << error;
                 }
             });
@@ -68,7 +69,7 @@ void Service::onConfigurationReceived(const QJsonObject& configJson)
     }
 
     // Validate if it looks like a config
-    if (!configJson.contains("system-configuration")){
+    if (!configJson.contains("system-configuration")) {
         qCWarning(ConfigurationService) << "Received invalid configuration JSON";
         return;
     }
@@ -76,7 +77,7 @@ void Service::onConfigurationReceived(const QJsonObject& configJson)
 
     DeviceConfiguration config = DeviceConfiguration::fromJson(configJson);
     updateCurrentConfig(config);
-    //config.saveToFile(CONFIGURATION_PATH); // Cache locally
+    // config.saveToFile(CONFIGURATION_PATH); // Cache locally
     setConfigVersion(config.version);
     if (!startupCheckInProgress()) {
         emit configurationChanged();
@@ -86,14 +87,15 @@ void Service::onConfigurationReceived(const QJsonObject& configJson)
     emit lastSyncTimeChanged();
 
     if (startupCheckInProgress()) {
-         completeStartupCheck();
+        completeStartupCheck();
     }
     setSyncing(false);
 }
 
 void Service::performStartupCheck()
 {
-    if (startupCheckInProgress()) return;
+    if (startupCheckInProgress())
+        return;
 
     setSyncing(true); // Indicate we are trying to sync
     setStartupCheckInProgress(true);
@@ -122,7 +124,7 @@ void Service::performStartupCheck()
     }
 
     qCInfo(ConfigurationService) << "Waiting for WebSocket connection (max" << STARTUP_CHECK_TIMEOUT_MS << "ms)...";
-    
+
     m_startupConnectionWatcher = connect(&m_webSocket,
                                          &Services::WebSocket::Service::connectedChanged,
                                          this,
@@ -132,8 +134,9 @@ void Service::performStartupCheck()
                                                  m_webSocket.request(Services::WebSocket::Method::GetConfig, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
                                                      if (success) {
                                                          onConfigurationReceived(result);
-                                                     } else {
-                                                        qCWarning(ConfigurationService) << "Failed to get config:" << error;
+                                                     }
+                                                     else {
+                                                         qCWarning(ConfigurationService) << "Failed to get config:" << error;
                                                      }
                                                  });
                                              }
@@ -148,7 +151,7 @@ void Service::completeStartupCheck()
     setSyncing(false);
 
     if (!m_currentConfig || !m_currentConfig->isValid()) {
-        //loadLocalConfiguration();
+        // loadLocalConfiguration();
         qCInfo(ConfigurationService) << "No valid configuration loaded during startup check";
     }
 

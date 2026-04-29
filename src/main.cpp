@@ -8,8 +8,8 @@
 #include "applications/setup/Application.h"
 #include "drivers/Container.h"
 #include "qmlcomponents/QmlUtils.h"
-#include "qmlcomponents/RoundAnimatedImage.h"
 #include "qmlcomponents/QrCodeImage.h"
+#include "qmlcomponents/RoundAnimatedImage.h"
 #include "services/Container.h"
 #include <QLoggingCategory>
 

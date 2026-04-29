@@ -2,9 +2,9 @@
 #include "drivers/network/Driver.h"
 
 #include <QDebug>
+#include <QLoggingCategory>
 #include <QSettings>
 #include <QTimer>
-#include <QLoggingCategory>
 
 Q_LOGGING_CATEGORY(RestService, "RestService")
 
@@ -43,7 +43,10 @@ void Service::get(const QString& endpoint, ResponseCallback callback)
 {
     if (!m_network.loopbackInterfaceConnected()) {
         qWarning() << "REST: Network not connected, cannot GET" << endpoint;
-        if (callback) QTimer::singleShot(0, this, [callback]() { callback(false, QJsonObject(), "Network not connected"); });
+        if (callback)
+            QTimer::singleShot(0, this, [callback]() {
+                callback(false, QJsonObject(), "Network not connected");
+            });
         return;
     }
 
@@ -65,7 +68,10 @@ void Service::post(const QString& endpoint, const QJsonObject& payload, Response
 {
     if (!m_network.loopbackInterfaceConnected()) {
         qWarning() << "REST: Network not connected, cannot POST" << endpoint;
-        if (callback) QTimer::singleShot(0, this, [callback]() { callback(false, QJsonObject(), "Network not connected"); });
+        if (callback)
+            QTimer::singleShot(0, this, [callback]() {
+                callback(false, QJsonObject(), "Network not connected");
+            });
         return;
     }
 
@@ -90,7 +96,10 @@ void Service::put(const QString& endpoint, const QJsonObject& payload, ResponseC
 {
     if (!m_network.loopbackInterfaceConnected()) {
         qWarning() << "REST: Network not connected, cannot PUT" << endpoint;
-        if (callback) QTimer::singleShot(0, this, [callback]() { callback(false, QJsonObject(), "Network not connected"); });
+        if (callback)
+            QTimer::singleShot(0, this, [callback]() {
+                callback(false, QJsonObject(), "Network not connected");
+            });
         return;
     }
 
@@ -115,7 +124,10 @@ void Service::deleteResource(const QString& endpoint, ResponseCallback callback)
 {
     if (!m_network.loopbackInterfaceConnected()) {
         qWarning() << "REST: Network not connected, cannot DELETE" << endpoint;
-        if (callback) QTimer::singleShot(0, this, [callback]() { callback(false, QJsonObject(), "Network not connected"); });
+        if (callback)
+            QTimer::singleShot(0, this, [callback]() {
+                callback(false, QJsonObject(), "Network not connected");
+            });
         return;
     }
 
@@ -130,14 +142,17 @@ void Service::deleteResource(const QString& endpoint, ResponseCallback callback)
 
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         handleResponse(reply);
-    }); 
+    });
 }
 
 void Service::download(const QString& endpoint, DataCallback callback)
 {
     if (!m_network.loopbackInterfaceConnected()) {
         qWarning() << "REST: Network not connected, cannot download" << endpoint;
-        if (callback) QTimer::singleShot(0, this, [callback]() { callback(false, QByteArray(), "Network not connected"); });
+        if (callback)
+            QTimer::singleShot(0, this, [callback]() {
+                callback(false, QByteArray(), "Network not connected");
+            });
         return;
     }
 
@@ -187,7 +202,8 @@ QNetworkRequest Service::createRequest(const QString& endpoint)
 void Service::handleResponse(QNetworkReply* reply)
 {
     reply->deleteLater();
-    if (!m_pendingRequests.contains(reply)) return;
+    if (!m_pendingRequests.contains(reply))
+        return;
 
     PendingRequest pending = m_pendingRequests.take(reply);
 
@@ -196,7 +212,8 @@ void Service::handleResponse(QNetworkReply* reply)
         // Propagate error via callback
         if (pending.isBinaryDownload && pending.dataCallback) {
             pending.dataCallback(false, QByteArray(), reply->errorString());
-        } else if (pending.responseCallback) {
+        }
+        else if (pending.responseCallback) {
             pending.responseCallback(false, QJsonObject(), reply->errorString());
         }
         return;
@@ -208,15 +225,17 @@ void Service::handleResponse(QNetworkReply* reply)
         if (pending.dataCallback) {
             pending.dataCallback(true, data, QString());
         }
-    } else {
+    }
+    else {
         QJsonDocument doc = QJsonDocument::fromJson(data);
         if (doc.isObject()) {
             if (pending.responseCallback) {
                 pending.responseCallback(true, doc.object(), QString());
             }
-        } else {
-             QString err = "Invalid JSON response";
-             if (pending.responseCallback) {
+        }
+        else {
+            QString err = "Invalid JSON response";
+            if (pending.responseCallback) {
                 pending.responseCallback(false, QJsonObject(), err);
             }
         }

@@ -20,19 +20,55 @@ class Item : public QObject
     Item(QObject* parent = nullptr);
     Item(const QString& id, const QString& filename, const QString& path, const QString& type, int size, QObject* parent = nullptr);
 
-    QString id() const { return m_id; }
-    QString filename() const { return m_filename; }
-    QString path() const { return m_path; }
-    QString type() const { return m_type; }
-    int size() const { return m_size; }
-    bool isValid() const { return m_isValid; }
+    QString id() const
+    {
+        return m_id;
+    }
+    QString filename() const
+    {
+        return m_filename;
+    }
+    QString path() const
+    {
+        return m_path;
+    }
+    QString type() const
+    {
+        return m_type;
+    }
+    int size() const
+    {
+        return m_size;
+    }
+    bool isValid() const
+    {
+        return m_isValid;
+    }
 
-    void setId(const QString& id) { m_id = id; }
-    void setFilename(const QString& filename) { m_filename = filename; }
-    void setPath(const QString& path) { m_path = path; }
-    void setType(const QString& type) { m_type = type; }
-    void setSize(int size) { m_size = size; }
-    void setIsValid(bool valid) { m_isValid = valid; }
+    void setId(const QString& id)
+    {
+        m_id = id;
+    }
+    void setFilename(const QString& filename)
+    {
+        m_filename = filename;
+    }
+    void setPath(const QString& path)
+    {
+        m_path = path;
+    }
+    void setType(const QString& type)
+    {
+        m_type = type;
+    }
+    void setSize(int size)
+    {
+        m_size = size;
+    }
+    void setIsValid(bool valid)
+    {
+        m_isValid = valid;
+    }
 
   private:
     QString m_id;

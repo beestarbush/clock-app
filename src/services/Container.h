@@ -3,6 +3,7 @@
 
 #include <QObject>
 
+#include "audio/Service.h"
 #include "configuration/Service.h"
 #include "datetime/Service.h"
 #include "logging/Service.h"
@@ -10,9 +11,9 @@
 #include "notification/Service.h"
 #include "qmlinterface/Service.h"
 #include "rest/Service.h"
-#include "websocket/Service.h"
 #include "systemmonitor/Service.h"
 #include "version/Service.h"
+#include "websocket/Service.h"
 
 namespace Drivers
 {
@@ -29,6 +30,7 @@ namespace Services
 class Container : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(Services::Audio::Service* audio MEMBER m_audio CONSTANT)
     Q_PROPERTY(Services::Media::Service* media MEMBER m_media CONSTANT)
     Q_PROPERTY(Services::DateTime::Service* dateTime MEMBER m_dateTime CONSTANT)
     Q_PROPERTY(Services::Logging::Service* logging MEMBER m_logging CONSTANT)
@@ -48,9 +50,10 @@ class Container : public QObject
 
   private:
     Version::Service* m_version;
+    Logging::Service* m_logging;
     Rest::Service* m_rest;
     WebSocket::Service* m_websocket;
-    Logging::Service* m_logging;
+    Audio::Service* m_audio;
     Notification::Service* m_notification;
     Media::Service* m_media;
     SystemMonitor::Service* m_systemMonitor;

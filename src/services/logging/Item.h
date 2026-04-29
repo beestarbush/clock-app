@@ -28,12 +28,30 @@ class Item : public QObject
     Item(QObject* parent = nullptr);
     Item(quint64 timestamp, const QString& category, const QString& message, Priority priority, QObject* parent = nullptr);
 
-    quint64 id() const { return m_id; }
-    quint64 timestamp() const { return m_timestamp; }
-    QString category() const { return m_category; }
-    QString message() const { return m_message; }
-    QString priority() const { return priorityToString(m_priority); }
-    Priority priorityLevel() const { return m_priority; }
+    quint64 id() const
+    {
+        return m_id;
+    }
+    quint64 timestamp() const
+    {
+        return m_timestamp;
+    }
+    QString category() const
+    {
+        return m_category;
+    }
+    QString message() const
+    {
+        return m_message;
+    }
+    QString priority() const
+    {
+        return priorityToString(m_priority);
+    }
+    Priority priorityLevel() const
+    {
+        return m_priority;
+    }
 
     static QString priorityToString(Priority priority);
 

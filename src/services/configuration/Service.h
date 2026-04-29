@@ -53,7 +53,7 @@ class Service : public QObject
     void setSyncing(bool syncing);
     void setConfigVersion(const QString& version);
     void setStartupCheckInProgress(bool inProgress);
-    
+
     // Slot for incoming config data
     void onConfigurationReceived(const QJsonObject& configJson);
 

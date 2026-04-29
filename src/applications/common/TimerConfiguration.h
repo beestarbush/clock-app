@@ -11,6 +11,7 @@ class TimerConfiguration : public Common::Configuration
     Q_OBJECT
     Q_PROPERTY(bool initialized READ isInitialized WRITE setInitialized NOTIFY initializedChanged)
     Q_PROPERTY(quint64 timestamp READ timestamp WRITE setTimestamp NOTIFY timestampChanged)
+    Q_PROPERTY(QString soundFile READ soundFile WRITE setSoundFile NOTIFY soundFileChanged)
 
   public:
     TimerConfiguration(QString name, QObject* parent = nullptr);
@@ -24,16 +25,21 @@ class TimerConfiguration : public Common::Configuration
     quint64 timestamp() const;
     void setTimestamp(const quint64& timestamp);
 
+    QString soundFile() const;
+    void setSoundFile(const QString& soundFile);
+
     TimerConfiguration& operator=(const TimerConfiguration& other);
     friend QDebug operator<<(QDebug debug, const TimerConfiguration& config);
 
   signals:
     void initializedChanged();
     void timestampChanged();
+    void soundFileChanged();
 
   private:
     bool m_initialized;
     quint64 m_timestamp;
+    QString m_soundFile;
 };
 } // namespace Common
 

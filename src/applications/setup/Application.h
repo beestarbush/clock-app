@@ -10,7 +10,7 @@ namespace Services::Configuration
 {
 class Service;
 class DeviceConfiguration;
-}
+} // namespace Services::Configuration
 
 namespace Services::WebSocket
 {
@@ -102,9 +102,9 @@ class Application : public QObject
     Q_ENUM(PanelType)
 
     Application(Common::DynamicApplicationMap& applications,
-          Services::Configuration::Service& configurationService,
-          Services::WebSocket::Service& webSocket,
-          QObject* parent = nullptr);
+                Services::Configuration::Service& configurationService,
+                Services::WebSocket::Service& webSocket,
+                QObject* parent = nullptr);
 
     bool isSetupComplete() const;
 
@@ -143,7 +143,7 @@ class Application : public QObject
 
     void applySystemConfiguration(const QJsonObject& systemConfig);
     QJsonObject buildSystemConfiguration() const;
-    
+
     void applyDeviceConfiguration(const Services::Configuration::DeviceConfiguration& config);
 
     Q_INVOKABLE void finish();

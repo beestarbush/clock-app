@@ -3,8 +3,8 @@
 #include "services/media/Service.h"
 #include <QDateTime>
 #include <QDebug>
-#include <QTimeZone>
 #include <QLoggingCategory>
+#include <QTimeZone>
 
 Q_LOGGING_CATEGORY(CurrentDateApplication, "CurrentDateApplication")
 

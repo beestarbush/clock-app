@@ -25,6 +25,8 @@ qt_add_executable(clock-app
     qmlcomponents/RoundAnimatedImage.h
     qmlcomponents/QrCodeImage.cpp
     qmlcomponents/QrCodeImage.h
+    services/audio/Service.cpp
+    services/audio/Service.h
     services/datetime/Service.cpp
     services/datetime/Service.h
     services/media/Item.cpp
@@ -127,6 +129,7 @@ set_target_properties(clock-app PROPERTIES
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
+    QT_QML_MODULE_NO_IMPORT_SCAN TRUE
 )
 
 target_link_libraries(clock-app

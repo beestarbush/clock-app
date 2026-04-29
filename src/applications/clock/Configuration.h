@@ -13,6 +13,8 @@ class Configuration : public Common::Configuration
     Q_PROPERTY(QColor hourColor READ hourColor WRITE setHourColor NOTIFY hourColorChanged)
     Q_PROPERTY(QColor minuteColor READ minuteColor WRITE setMinuteColor NOTIFY minuteColorChanged)
     Q_PROPERTY(QColor secondColor READ secondColor WRITE setSecondColor NOTIFY secondColorChanged)
+    Q_PROPERTY(QString tickSoundFile READ tickSoundFile WRITE setTickSoundFile NOTIFY tickSoundFileChanged)
+    Q_PROPERTY(QString hourlyChimeSoundFile READ hourlyChimeSoundFile WRITE setHourlyChimeSoundFile NOTIFY hourlyChimeSoundFileChanged)
 
   public:
     Configuration(QString name, QObject* parent = nullptr);
@@ -29,6 +31,12 @@ class Configuration : public Common::Configuration
     QColor secondColor() const;
     void setSecondColor(const QColor& secondColor);
 
+    QString tickSoundFile() const;
+    void setTickSoundFile(const QString& tickSoundFile);
+
+    QString hourlyChimeSoundFile() const;
+    void setHourlyChimeSoundFile(const QString& hourlyChimeSoundFile);
+
     Configuration& operator=(const Configuration& other);
     friend QDebug operator<<(QDebug debug, const Configuration& config);
 
@@ -36,11 +44,15 @@ class Configuration : public Common::Configuration
     void hourColorChanged();
     void minuteColorChanged();
     void secondColorChanged();
+    void tickSoundFileChanged();
+    void hourlyChimeSoundFileChanged();
 
   private:
     QColor m_hourColor;
     QColor m_minuteColor;
     QColor m_secondColor;
+    QString m_tickSoundFile;
+    QString m_hourlyChimeSoundFile;
 };
 } // namespace Applications::Clock
 

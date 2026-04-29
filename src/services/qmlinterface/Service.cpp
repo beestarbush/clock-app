@@ -1,7 +1,7 @@
 #include "Service.h"
 #include <QDebug>
-#include <QQmlApplicationEngine>
 #include <QLoggingCategory>
+#include <QQmlApplicationEngine>
 
 Q_LOGGING_CATEGORY(QmlService, "QmlService")
 

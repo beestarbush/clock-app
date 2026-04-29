@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "services/audio/Service.h"
 #include "services/media/Service.h"
 #include <QDateTime>
 #include <QDebug>
@@ -14,10 +15,11 @@ constexpr quint64 SECONDS_IN_A_DAY = SECONDS_IN_HOUR * 24;
 constexpr quint64 DAYS_IN_A_WEEK = 7;
 constexpr quint64 DAYS_IN_YEAR = 365;
 
-Application::Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, QObject* parent)
+Application::Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, QObject* parent)
     : Common::Application(id, type, displayName, order, watchface, parent),
       m_configuration(new Common::TimerConfiguration(id, parent)),
       m_media(media),
+      m_audio(audio),
       m_years(0),
       m_days(0),
       m_daysInWeek(0),
@@ -62,7 +64,7 @@ void Application::startTimer()
 
     if (!m_timer.isActive()) {
         connect(&m_timer, &QTimer::timeout, this, &Application::calculateTimeRemaining);
-        m_timer.start(1000); // Update every second
+        m_timer.start(1000);
     }
 }
 
@@ -90,6 +92,12 @@ void Application::calculateTimeRemaining()
             setHours(0);
             setMinutes(0);
             setSeconds(0);
+
+            QString soundFile = m_configuration->soundFile();
+            if (!soundFile.isEmpty()) {
+                m_audio.play(soundFile, Services::WebSocket::PlayMode::Queue);
+            }
+
             emit countdownFinished();
             m_finished = true;
         }

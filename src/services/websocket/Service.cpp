@@ -31,11 +31,12 @@ Service::Service(Drivers::Network::Driver& network, QObject* parent)
     connect(&m_webSocket, &QWebSocket::textMessageReceived, this, &Service::onTextMessageReceived);
 
     connect(&m_network, &Drivers::Network::Driver::loopbackInterfaceConnectedChanged, this, [this]() {
-         if (m_network.loopbackInterfaceConnected()) {
-             connectToSocket();
-         } else {
-             disconnectFromSocket();
-         }
+        if (m_network.loopbackInterfaceConnected()) {
+            connectToSocket();
+        }
+        else {
+            disconnectFromSocket();
+        }
     });
 
     if (m_network.loopbackInterfaceConnected()) {
@@ -58,7 +59,8 @@ bool Service::connected() const
 
 void Service::setServerUrl(const QString& url)
 {
-    if (m_serverUrl == url) return;
+    if (m_serverUrl == url)
+        return;
 
     m_serverUrl = url;
     saveProperty(PROPERTY_SERVER_URL_KEY, url);
@@ -133,7 +135,8 @@ void Service::subscribe(const Topic& topic)
     request(Method::Subscribe, params, [topic](bool success, const QJsonObject&, const QString& error) {
         if (success) {
             qCInfo(WebSocketService) << "Subscribed to topic:" << topic;
-        } else {
+        }
+        else {
             qCWarning(WebSocketService) << "Failed to subscribe to" << topic << ":" << error;
         }
     });
@@ -152,7 +155,8 @@ void Service::unsubscribe(const Topic& topic)
     request(Method::Unsubscribe, params, [topic](bool success, const QJsonObject&, const QString& error) {
         if (success) {
             qCInfo(WebSocketService) << "Unsubscribed from topic:" << topic;
-        } else {
+        }
+        else {
             qCWarning(WebSocketService) << "Failed to unsubscribe from" << topic << ":" << error;
         }
     });
@@ -160,9 +164,11 @@ void Service::unsubscribe(const Topic& topic)
 
 void Service::connectToSocket()
 {
-    if (m_serverUrl.isEmpty()) return;
+    if (m_serverUrl.isEmpty())
+        return;
     if (m_webSocket.state() == QAbstractSocket::ConnectedState ||
-        m_webSocket.state() == QAbstractSocket::ConnectingState) return;
+        m_webSocket.state() == QAbstractSocket::ConnectingState)
+        return;
 
     qCDebug(WebSocketService) << "Connecting to" << m_serverUrl;
     m_webSocket.open(QUrl(m_serverUrl));
@@ -207,7 +213,7 @@ void Service::onDisconnected()
 
 void Service::onError(QAbstractSocket::SocketError error)
 {
-     qCWarning(WebSocketService) << "Error:" << error << m_webSocket.errorString();
+    qCWarning(WebSocketService) << "Error:" << error << m_webSocket.errorString();
 }
 
 void Service::onTextMessageReceived(const QString& message)
@@ -215,7 +221,8 @@ void Service::onTextMessageReceived(const QString& message)
     QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
     if (doc.isObject()) {
         dispatchMessage(doc.object());
-    } else {
+    }
+    else {
         qCWarning(WebSocketService) << "Received invalid JSON:" << message;
     }
 }
@@ -234,11 +241,13 @@ void Service::dispatchMessage(const QJsonObject& message)
             if (message.contains("error")) {
                 QString error = message["error"].toObject()["message"].toString();
                 callback(false, QJsonObject(), error);
-            } else {
+            }
+            else {
                 QJsonObject result = message["result"].toObject();
                 callback(true, result, QString());
             }
-        } else {
+        }
+        else {
             qCDebug(WebSocketService) << "Received response for unknown request id:" << id;
         }
     }
@@ -261,7 +270,8 @@ void Service::resubscribeAll()
         request(Method::Subscribe, params, [topic](bool success, const QJsonObject&, const QString& error) {
             if (success) {
                 qCInfo(WebSocketService) << "Subscribed to topic:" << topicToString(topic);
-            } else {
+            }
+            else {
                 qCWarning(WebSocketService) << "Failed to subscribe to" << topicToString(topic) << ":" << error;
             }
         });

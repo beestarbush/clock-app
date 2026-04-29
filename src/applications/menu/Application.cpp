@@ -95,7 +95,8 @@ void Application::shutdown()
     m_websocket.request(Services::WebSocket::Method::Shutdown, QJsonObject(), [](bool success, const QJsonObject&, const QString& error) {
         if (success) {
             qCInfo(MenuApplication) << "System shutdown initiated";
-        } else {
+        }
+        else {
             qCWarning(MenuApplication) << "Failed to shutdown system:" << error;
         }
     });

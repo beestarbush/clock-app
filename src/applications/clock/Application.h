@@ -3,9 +3,16 @@
 
 #include "Configuration.h"
 #include "applications/common/Application.h"
+#include "services/websocket/Types.h"
 #include <QObject>
+#include <QTimer>
 
 namespace Services::Media
+{
+class Service;
+}
+
+namespace Services::Audio
 {
 class Service;
 }
@@ -20,7 +27,7 @@ class Application : public Common::Application
     Q_PROPERTY(Configuration* configuration READ configuration CONSTANT)
 
   public:
-    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, QObject* parent = nullptr);
+    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, QObject* parent = nullptr);
 
     Configuration* configuration() const override;
 
@@ -28,8 +35,12 @@ class Application : public Common::Application
     void applyConfiguration(const QJsonObject& configuration);
 
   private:
+    void onTimerTick();
+
     Configuration* m_configuration;
     Services::Media::Service& m_media;
+    Services::Audio::Service& m_audio;
+    QTimer m_timer;
 };
 } // namespace Applications::Clock
 

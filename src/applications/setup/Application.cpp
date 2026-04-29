@@ -1,14 +1,14 @@
 #include "Application.h"
 #include "applications/common/Application.h"
 #include "applications/common/Configuration.h"
-#include "services/configuration/Service.h"
 #include "services/configuration/DeviceConfiguration.h"
+#include "services/configuration/Service.h"
 #include "services/websocket/Service.h"
 #include <QDate>
 #include <QDebug>
 #include <QJsonObject>
-#include <QSettings>
 #include <QLoggingCategory>
+#include <QSettings>
 
 Q_LOGGING_CATEGORY(SetupApplication, "SetupApplication")
 
@@ -73,10 +73,11 @@ QString Application::deviceId() const
 
 void Application::setDeviceId(const QString& id)
 {
-    if (m_deviceId == id) return;
+    if (m_deviceId == id)
+        return;
 
     m_deviceId = id;
-    
+
     // Send device ID update to backend
     QJsonObject params;
     params["device_id"] = id;
@@ -85,7 +86,7 @@ void Application::setDeviceId(const QString& id)
             qCWarning(SetupApplication) << "Failed to set device ID:" << error;
         }
     });
-    
+
     emit deviceIdChanged();
 }
 

@@ -6,8 +6,8 @@
 #include "applications/timeelapsed/Application.h"
 
 #include <QDebug>
-#include <algorithm>
 #include <QLoggingCategory>
+#include <algorithm>
 
 Q_LOGGING_CATEGORY(WatchfaceApplication, "WatchfaceApplication")
 

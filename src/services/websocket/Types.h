@@ -28,6 +28,8 @@ enum class Method
     SetDeviceId,
     Shutdown,
     Reboot,
+    PlaySound,
+    StopSound,
     UnknownMethod
 };
 Q_ENUM_NS(Method)
@@ -41,6 +43,14 @@ enum class Topic
     UnknownTopic
 };
 Q_ENUM_NS(Topic)
+
+enum class PlayMode
+{
+    Concurrent,
+    Queue,
+    Replace
+};
+Q_ENUM_NS(PlayMode)
 
 inline MessageType messageTypeFromString(const QString& typeStr)
 {
@@ -72,7 +82,6 @@ inline QString messageTypeToString(MessageType type)
     }
 }
 
-
 inline QString methodToString(Method type)
 {
     switch (type) {
@@ -96,6 +105,10 @@ inline QString methodToString(Method type)
         return "shutdown";
     case Method::Reboot:
         return "reboot";
+    case Method::PlaySound:
+        return "playSound";
+    case Method::StopSound:
+        return "stopSound";
     default:
         return "unknown";
     }
@@ -131,6 +144,20 @@ inline QString topicToString(Topic topic)
         return "application-status";
     case Topic::Temperature:
         return "temperature";
+    default:
+        return "unknown";
+    }
+}
+
+inline QString playModeToString(PlayMode mode)
+{
+    switch (mode) {
+    case PlayMode::Concurrent:
+        return "concurrent";
+    case PlayMode::Queue:
+        return "queue";
+    case PlayMode::Replace:
+        return "replace";
     default:
         return "unknown";
     }

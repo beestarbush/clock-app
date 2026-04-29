@@ -22,7 +22,7 @@ class DeviceConfiguration
     // Metadata
     QString version;
     QDateTime lastModified;
-    QString deviceId; 
+    QString deviceId;
     QString activeAppId;
 
     // System-wide configuration (pendulum colors, brightness, volume, etc.)
