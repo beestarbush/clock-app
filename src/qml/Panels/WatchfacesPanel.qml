@@ -32,6 +32,8 @@ Panel {
                 return 5
             if (currentApp.watchface === Backend.Common.Watchface.DateFrame)
                 return 6
+            if (currentApp.watchface === Backend.Common.Watchface.CanaryFace)
+                return 7
             return 0
         }
 
@@ -148,6 +150,14 @@ Panel {
             month: (currentAppValid && currentApp.month) || 0
             day: (currentAppValid && currentApp.day) || 0
             dayOfWeek: (currentAppValid && currentApp.dayOfWeek) || 0
+            onClicked: watchfacesPanel.clicked()
+        }
+
+        // Canary Panel
+        CanaryPanel {
+            id: canaryPanel
+
+            currentApp: (currentAppValid && currentApp.watchface === Backend.Common.Watchface.CanaryFace) ? currentApp : null
             onClicked: watchfacesPanel.clicked()
         }
     }

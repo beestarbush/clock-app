@@ -29,6 +29,8 @@ qt_add_executable(clock-app
     services/audio/Service.h
     services/datetime/Service.cpp
     services/datetime/Service.h
+    services/environment/Service.cpp
+    services/environment/Service.h
     services/media/Item.cpp
     services/media/Item.h
     services/media/Model.cpp
@@ -97,6 +99,10 @@ qt_add_executable(clock-app
     applications/nooperation/Application.h
     applications/currentdate/Application.cpp
     applications/currentdate/Application.h
+    applications/environment/Application.cpp
+    applications/environment/Application.h
+    applications/environment/Configuration.cpp
+    applications/environment/Configuration.h
     applications/watchface/Application.cpp
     applications/watchface/Application.h
 )

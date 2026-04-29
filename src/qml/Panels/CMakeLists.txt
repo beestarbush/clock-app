@@ -7,6 +7,7 @@ qt_add_qml_module(PanelLib
     URI Panels
     VERSION 1.0
     QML_FILES
+        CanaryPanel.qml
         ClockPanel.qml
         CountdownPanel.qml
         DateFramePanel.qml

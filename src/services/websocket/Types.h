@@ -22,7 +22,7 @@ enum class Method
     Unsubscribe,
     GetConfig,
     GetMedia,
-    GetTemperature,
+    GetProcessorTemperature,
     SetBrightness,
     SetVolume,
     SetDeviceId,
@@ -39,7 +39,8 @@ enum class Topic
     Configuration,
     Media,
     ApplicationStatus,
-    Temperature,
+    ProcessorTemperature,
+    Environment,
     UnknownTopic
 };
 Q_ENUM_NS(Topic)
@@ -93,8 +94,8 @@ inline QString methodToString(Method type)
         return "getConfig";
     case Method::GetMedia:
         return "getMedia";
-    case Method::GetTemperature:
-        return "getTemperature";
+    case Method::GetProcessorTemperature:
+        return "getProcessorTemperature";
     case Method::SetBrightness:
         return "setBrightness";
     case Method::SetVolume:
@@ -125,8 +126,11 @@ inline Topic topicFromString(const QString& topicStr)
     else if (topicStr == "application-status") {
         return Topic::ApplicationStatus;
     }
-    else if (topicStr == "temperature") {
-        return Topic::Temperature;
+    else if (topicStr == "processor-temperature") {
+        return Topic::ProcessorTemperature;
+    }
+    else if (topicStr == "environment") {
+        return Topic::Environment;
     }
     else {
         return Topic::UnknownTopic;
@@ -142,8 +146,10 @@ inline QString topicToString(Topic topic)
         return "media";
     case Topic::ApplicationStatus:
         return "application-status";
-    case Topic::Temperature:
-        return "temperature";
+    case Topic::ProcessorTemperature:
+        return "processor-temperature";
+    case Topic::Environment:
+        return "environment";
     default:
         return "unknown";
     }

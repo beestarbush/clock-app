@@ -24,18 +24,18 @@ Service::Service(Services::WebSocket::Service& webSocket,
       m_webSocket(webSocket),
       m_version(version),
       m_notificationManager(notificationManager),
-      m_temperature(0),
+      m_processorTemperature(0),
       m_isReporting(false)
 {
-    // Subscribe to temperature data from backend
-    m_webSocket.subscribe(Services::WebSocket::Topic::Temperature);
+    // Subscribe to processor temperature data from backend
+    m_webSocket.subscribe(Services::WebSocket::Topic::ProcessorTemperature);
     connect(&m_webSocket, &Services::WebSocket::Service::publishReceived, this, [this](const Services::WebSocket::Topic& topic, const QJsonObject& data) {
-        if (topic == Services::WebSocket::Topic::Temperature) {
-            onTemperatureReceived(data);
+        if (topic == Services::WebSocket::Topic::ProcessorTemperature) {
+            onProcessorTemperatureReceived(data);
         }
     });
 
-    // Configure monitor timer (temperature checks etc.)
+    // Configure monitor timer (processor temperature checks etc.)
     m_monitorTimer.setSingleShot(false);
     m_monitorTimer.setInterval(MONITOR_INTERVAL);
     connect(&m_monitorTimer, &QTimer::timeout, this, &Service::monitor);
@@ -49,10 +49,10 @@ Service::Service(Services::WebSocket::Service& webSocket,
     // Start reporting once WebSocket is connected
     connect(&m_webSocket, &Services::WebSocket::Service::connectedChanged, this, [this]() {
         if (m_webSocket.connected()) {
-            // Fetch initial temperature
-            m_webSocket.request(Services::WebSocket::Method::GetTemperature, {}, [this](bool success, const QJsonObject& response, const QString&) {
-                if (success && response.contains("temperature")) {
-                    onTemperatureReceived(response);
+            // Fetch initial processor temperature
+            m_webSocket.request(Services::WebSocket::Method::GetProcessorTemperature, {}, [this](bool success, const QJsonObject& response, const QString&) {
+                if (success && response.contains("processor_temperature")) {
+                    onProcessorTemperatureReceived(response);
                 }
             });
             report();
@@ -69,14 +69,14 @@ Service::Service(Services::WebSocket::Service& webSocket,
     }
 }
 
-void Service::onTemperatureReceived(const QJsonObject& data)
+void Service::onProcessorTemperatureReceived(const QJsonObject& data)
 {
-    m_temperature = data["temperature"].toDouble(0);
+    m_processorTemperature = data["processor_temperature"].toDouble(0);
 }
 
 void Service::monitor()
 {
-    if (m_temperature > 85000) { // 85.0 °C
+    if (m_processorTemperature > 85000) { // 85.0 °C
         m_notificationManager.showWarning(
             QStringLiteral("High CPU temperature"),
             QStringLiteral("The CPU temperature is too high. Please ensure proper cooling."));

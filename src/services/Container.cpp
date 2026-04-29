@@ -11,6 +11,7 @@ Container::Container(Drivers::Container& drivers, QObject* parent)
       m_rest(new Rest::Service(*drivers.m_network, this)),
       m_websocket(new WebSocket::Service(*drivers.m_network, this)),
       m_audio(new Audio::Service(*m_websocket, this)),
+      m_environment(new Environment::Service(*m_websocket, this)),
       m_notification(new Notification::Service(this)),
       m_media(new Media::Service(*m_websocket, *m_rest, this)),
       m_systemMonitor(new SystemMonitor::Service(*m_websocket, *m_version, *m_notification, this)),

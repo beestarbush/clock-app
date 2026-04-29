@@ -7,6 +7,7 @@
 #include "countdown/Application.h"
 #include "currentdate/Application.h"
 #include "debug/Application.h"
+#include "environment/Application.h"
 #include "menu/Application.h"
 #include "nooperation/Application.h"
 #include "setup/Application.h"
@@ -21,6 +22,10 @@ namespace Audio
 class Service;
 }
 namespace Configuration
+{
+class Service;
+}
+namespace Environment
 {
 class Service;
 }
@@ -62,8 +67,8 @@ class Container : public QObject
     void setReloading(bool reloading);
 
     // Factory method
-    Common::Application* createApplication(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime);
-    void reload(Services::Configuration::Service& configuration, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime);
+    Common::Application* createApplication(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime, Services::Environment::Service& environment);
+    void reload(Services::Configuration::Service& configuration, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime, Services::Environment::Service& environment);
 
   private:
     bool m_reloading = true;

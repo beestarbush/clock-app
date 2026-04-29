@@ -22,9 +22,9 @@ namespace Services::SystemMonitor
 /**
  * Service
  *
- * Periodically monitors system status (temperature, uptime, etc.) and
+ * Periodically monitors system status (processor temperature, uptime, etc.) and
  * reports it to the remote API server. Subscribes to the backend for
- * temperature data.
+ * processor temperature data.
  */
 class Service : public QObject
 {
@@ -39,13 +39,13 @@ class Service : public QObject
   private:
     void monitor();
     void report();
-    void onTemperatureReceived(const QJsonObject& data);
+    void onProcessorTemperatureReceived(const QJsonObject& data);
 
     Services::WebSocket::Service& m_webSocket;
     Services::Version::Service& m_version;
     Services::Notification::Service& m_notificationManager;
 
-    double m_temperature;
+    double m_processorTemperature;
     QTimer m_monitorTimer;
     QTimer m_reportTimer;
     bool m_isReporting;

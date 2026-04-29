@@ -6,6 +6,7 @@
 #include "audio/Service.h"
 #include "configuration/Service.h"
 #include "datetime/Service.h"
+#include "environment/Service.h"
 #include "logging/Service.h"
 #include "media/Service.h"
 #include "notification/Service.h"
@@ -31,6 +32,7 @@ class Container : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(Services::Audio::Service* audio MEMBER m_audio CONSTANT)
+    Q_PROPERTY(Services::Environment::Service* environment MEMBER m_environment CONSTANT)
     Q_PROPERTY(Services::Media::Service* media MEMBER m_media CONSTANT)
     Q_PROPERTY(Services::DateTime::Service* dateTime MEMBER m_dateTime CONSTANT)
     Q_PROPERTY(Services::Logging::Service* logging MEMBER m_logging CONSTANT)
@@ -54,6 +56,7 @@ class Container : public QObject
     Rest::Service* m_rest;
     WebSocket::Service* m_websocket;
     Audio::Service* m_audio;
+    Environment::Service* m_environment;
     Notification::Service* m_notification;
     Media::Service* m_media;
     SystemMonitor::Service* m_systemMonitor;

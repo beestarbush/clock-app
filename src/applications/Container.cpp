@@ -1,6 +1,7 @@
 #include "Container.h"
 #include "services/Container.h"
 #include "services/configuration/DeviceConfiguration.h"
+#include "services/environment/Service.h"
 #include <QDebug>
 #include <QLoggingCategory>
 
@@ -18,13 +19,13 @@ Container::Container(Services::Container& services, QObject* parent)
 {
     connect(services.m_configuration, &Services::Configuration::Service::configurationChanged, this, [this, &services]() {
         qCInfo(ApplicationContainer) << "Configuration changed, reloading applications";
-        reload(*services.m_configuration, *services.m_media, *services.m_audio, *services.m_dateTime);
+        reload(*services.m_configuration, *services.m_media, *services.m_audio, *services.m_dateTime, *services.m_environment);
     });
 
     // When startup check is already completed, reload immediately to apply initial configuration (if any present).
     if (!services.m_configuration->startupCheckInProgress() &&
         !services.m_media->startupCheckInProgress()) {
-        reload(*services.m_configuration, *services.m_media, *services.m_audio, *services.m_dateTime);
+        reload(*services.m_configuration, *services.m_media, *services.m_audio, *services.m_dateTime, *services.m_environment);
     }
 
     auto notification = services.m_notification;
@@ -44,7 +45,7 @@ void Container::setReloading(bool reloading)
     }
 }
 
-void Container::reload(Services::Configuration::Service& configuration, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime)
+void Container::reload(Services::Configuration::Service& configuration, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime, Services::Environment::Service& environment)
 {
     setReloading(true);
 
@@ -91,7 +92,7 @@ void Container::reload(Services::Configuration::Service& configuration, Services
         }
 
         // Create application
-        Common::Application* app = createApplication(id, type, displayName, order, watchface, media, audio, dateTime);
+        Common::Application* app = createApplication(id, type, displayName, order, watchface, media, audio, dateTime, environment);
         if (app) {
             app->applyConfiguration(appConfig);
             m_applications[id] = app;
@@ -106,7 +107,7 @@ void Container::reload(Services::Configuration::Service& configuration, Services
     setReloading(false);
 }
 
-Common::Application* Container::createApplication(const QString& id, const Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime)
+Common::Application* Container::createApplication(const QString& id, const Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime, Services::Environment::Service& environment)
 {
     if (type == Common::Type::Clock) {
         return new Clock::Application(id, type, displayName, order, watchface, media, audio, this);
@@ -122,6 +123,9 @@ Common::Application* Container::createApplication(const QString& id, const Commo
     }
     else if (type == Common::Type::CurrentDate) {
         return new CurrentDate::Application(id, type, displayName, order, watchface, media, dateTime, this);
+    }
+    else if (type == Common::Type::Environment) {
+        return new Environment::Application(id, type, displayName, order, watchface, environment, this);
     }
     else {
         qCWarning(ApplicationContainer) << "Unknown application type:" << type;

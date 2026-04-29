@@ -2,6 +2,7 @@
 #include "applications/clock/Application.h"
 #include "applications/countdown/Application.h"
 #include "applications/currentdate/Application.h"
+#include "applications/environment/Application.h"
 #include "applications/nooperation/Application.h"
 #include "applications/timeelapsed/Application.h"
 
@@ -142,6 +143,16 @@ void Application::updateEnabledWatchfaces()
             auto* castedApp = dynamic_cast<Applications::CurrentDate::Application*>(app);
             if (!castedApp) {
                 qCDebug(WatchfaceApplication) << "Watchface: Failed to cast application" << it.key() << "to CurrentDate::Application";
+                continue;
+            }
+
+            m_enabledWatchfaces.append(castedApp);
+        } break;
+
+        case Common::Type::Environment: {
+            auto* castedApp = dynamic_cast<Applications::Environment::Application*>(app);
+            if (!castedApp) {
+                qCDebug(WatchfaceApplication) << "Watchface: Failed to cast application" << it.key() << "to Environment::Application";
                 continue;
             }
 

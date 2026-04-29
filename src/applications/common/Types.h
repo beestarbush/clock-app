@@ -17,6 +17,7 @@ enum class Type
     Countdown,
     NoOperation,
     CurrentDate,
+    Environment,
     Unknown
 };
 Q_ENUM_NS(Type)
@@ -39,6 +40,9 @@ inline Type typeFromString(const QString& typeStr)
     else if (typeStr == "current-date") {
         return Type::CurrentDate;
     }
+    else if (typeStr == "environment") {
+        return Type::Environment;
+    }
     else {
         return Type::Unknown;
     }
@@ -57,6 +61,8 @@ inline QString typeToString(Type type)
         return "no-operation";
     case Type::CurrentDate:
         return "current-date";
+    case Type::Environment:
+        return "environment";
     default:
         return "unknown";
     }
@@ -70,6 +76,7 @@ enum class Watchface
     CountdownTimer,
     PhotoFrame,
     DateFrame,
+    CanaryFace,
     None
 };
 Q_ENUM_NS(Watchface)
@@ -95,6 +102,9 @@ inline Watchface watchfaceFromString(const QString& watchfaceStr)
     else if (watchfaceStr == "date-frame") {
         return Watchface::DateFrame;
     }
+    else if (watchfaceStr == "canary") {
+        return Watchface::CanaryFace;
+    }
     else {
         return Watchface::None;
     }
@@ -115,6 +125,8 @@ inline QString watchfaceToString(Watchface watchface)
         return "photo-frame";
     case Watchface::DateFrame:
         return "date-frame";
+    case Watchface::CanaryFace:
+        return "canary";
     default:
         return "";
     }
