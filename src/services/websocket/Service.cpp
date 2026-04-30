@@ -96,7 +96,7 @@ void Service::request(const Method& method, const QJsonObject& params, ResponseC
 
     QJsonDocument doc(req);
     QString message = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
-    qCInfo(WebSocketService) << "-> request" << message;
+    qCDebug(WebSocketService) << "-> request" << message;
     m_webSocket.sendTextMessage(message);
 }
 
@@ -115,7 +115,7 @@ void Service::publish(const Topic& topic, const QJsonObject& params)
 
     QJsonDocument doc(msg);
     QString message = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
-    qCInfo(WebSocketService) << "-> publish" << message;
+    qCDebug(WebSocketService) << "-> publish" << message;
     m_webSocket.sendTextMessage(message);
 }
 
@@ -134,7 +134,7 @@ void Service::subscribe(const Topic& topic)
     params["topic"] = topicToString(topic);
     request(Method::Subscribe, params, [topic](bool success, const QJsonObject&, const QString& error) {
         if (success) {
-            qCInfo(WebSocketService) << "Subscribed to topic:" << topic;
+            qCDebug(WebSocketService) << "Subscribed to topic:" << topic;
         }
         else {
             qCWarning(WebSocketService) << "Failed to subscribe to" << topic << ":" << error;
@@ -154,7 +154,7 @@ void Service::unsubscribe(const Topic& topic)
     params["topic"] = topicToString(topic);
     request(Method::Unsubscribe, params, [topic](bool success, const QJsonObject&, const QString& error) {
         if (success) {
-            qCInfo(WebSocketService) << "Unsubscribed from topic:" << topic;
+            qCDebug(WebSocketService) << "Unsubscribed from topic:" << topic;
         }
         else {
             qCWarning(WebSocketService) << "Failed to unsubscribe from" << topic << ":" << error;
@@ -181,7 +181,7 @@ void Service::disconnectFromSocket()
 
 void Service::onConnected()
 {
-    qCInfo(WebSocketService) << "Connected!";
+    qCDebug(WebSocketService) << "Connected!";
     m_connected = true;
     emit connectedChanged();
 
@@ -191,7 +191,7 @@ void Service::onConnected()
 
 void Service::onDisconnected()
 {
-    qCInfo(WebSocketService) << "Disconnected, TODO: raise notification that internal communication failed.";
+    qCDebug(WebSocketService) << "Disconnected, TODO: raise notification that internal communication failed.";
 
     // Clear pending requests — they will never get a response
     for (auto it = m_pendingRequests.begin(); it != m_pendingRequests.end(); ++it) {
@@ -230,7 +230,7 @@ void Service::onTextMessageReceived(const QString& message)
 void Service::dispatchMessage(const QJsonObject& message)
 {
     QString messageStr = QString::fromUtf8(QJsonDocument(message).toJson(QJsonDocument::Compact));
-    qCInfo(WebSocketService) << "<- response/publish" << messageStr;
+    qCDebug(WebSocketService) << "<- response/publish" << messageStr;
     MessageType type = messageTypeFromString(message["type"].toString());
 
     if (type == MessageType::Response) {
@@ -269,7 +269,7 @@ void Service::resubscribeAll()
         params["topic"] = topicToString(topic);
         request(Method::Subscribe, params, [topic](bool success, const QJsonObject&, const QString& error) {
             if (success) {
-                qCInfo(WebSocketService) << "Subscribed to topic:" << topicToString(topic);
+                qCDebug(WebSocketService) << "Subscribed to topic:" << topicToString(topic);
             }
             else {
                 qCWarning(WebSocketService) << "Failed to subscribe to" << topicToString(topic) << ":" << error;

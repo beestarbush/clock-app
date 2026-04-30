@@ -3,15 +3,30 @@
 
 #include "Configuration.h"
 #include <QDebug>
+#include <QList>
+#include <QString>
 
 namespace Common
 {
+
+struct Milestone
+{
+    quint64 value;
+    QString unit; // "days" or "years"
+
+    bool operator==(const Milestone& other) const
+    {
+        return value == other.value && unit == other.unit;
+    }
+};
+
 class TimerConfiguration : public Common::Configuration
 {
     Q_OBJECT
     Q_PROPERTY(bool initialized READ isInitialized WRITE setInitialized NOTIFY initializedChanged)
     Q_PROPERTY(quint64 timestamp READ timestamp WRITE setTimestamp NOTIFY timestampChanged)
     Q_PROPERTY(QString soundFile READ soundFile WRITE setSoundFile NOTIFY soundFileChanged)
+    Q_PROPERTY(QList<Common::Milestone> milestones READ milestones WRITE setMilestones NOTIFY milestonesChanged)
 
   public:
     TimerConfiguration(QString name, QObject* parent = nullptr);
@@ -28,6 +43,9 @@ class TimerConfiguration : public Common::Configuration
     QString soundFile() const;
     void setSoundFile(const QString& soundFile);
 
+    QList<Milestone> milestones() const;
+    void setMilestones(const QList<Milestone>& milestones);
+
     TimerConfiguration& operator=(const TimerConfiguration& other);
     friend QDebug operator<<(QDebug debug, const TimerConfiguration& config);
 
@@ -35,11 +53,13 @@ class TimerConfiguration : public Common::Configuration
     void initializedChanged();
     void timestampChanged();
     void soundFileChanged();
+    void milestonesChanged();
 
   private:
     bool m_initialized;
     quint64 m_timestamp;
     QString m_soundFile;
+    QList<Milestone> m_milestones;
 };
 } // namespace Common
 

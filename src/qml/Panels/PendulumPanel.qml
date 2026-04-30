@@ -18,4 +18,21 @@ RoundPanel {
         anchors.fill: parent
         active: Backend.Applications.setup.setupComplete || (!Backend.Applications.setup.setupComplete && Backend.Applications.setup.currentPanel === Backend.SetupEnums.Finish)
     }
+
+    // Find the first clock app from the full application list.
+    // Re-evaluated whenever apps are reloaded.
+    property var clockApp: {
+        var _ = Backend.Applications.reloading // depend on reloading so this re-evaluates after reload
+        var ids = Backend.Applications.applicationIds
+        for (var i = 0; i < ids.length; i++) {
+            var app = Backend.Applications.application(ids[i])
+            if (app && app.type === Backend.Common.Type.Clock) return app
+        }
+        return null
+    }
+
+    Connections {
+        target: pendulumPanel.clockApp
+        function onTicked() { pendulum.tick() }
+    }
 }

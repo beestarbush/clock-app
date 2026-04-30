@@ -10,9 +10,11 @@ const QColor PROPERTY_MINUTE_COLOR_DEFAULT = QColor("#005099");
 const QString PROPERTY_SECOND_COLOR_KEY = QStringLiteral("second-color");
 const QColor PROPERTY_SECOND_COLOR_DEFAULT = QColor("#009950");
 const QString PROPERTY_TICK_SOUND_FILE_KEY = QStringLiteral("tick-sound-file");
-const QString PROPERTY_TICK_SOUND_FILE_DEFAULT = QStringLiteral("tick.wav");
+const QString PROPERTY_TICK_SOUND_FILE_DEFAULT = QStringLiteral("");
+const QString PROPERTY_TACK_SOUND_FILE_KEY = QStringLiteral("tack-sound-file");
+const QString PROPERTY_TACK_SOUND_FILE_DEFAULT = QStringLiteral("");
 const QString PROPERTY_HOURLY_CHIME_SOUND_FILE_KEY = QStringLiteral("hourly-chime-sound-file");
-const QString PROPERTY_HOURLY_CHIME_SOUND_FILE_DEFAULT = QStringLiteral("hourly-chime.wav");
+const QString PROPERTY_HOURLY_CHIME_SOUND_FILE_DEFAULT = QStringLiteral("");
 
 Configuration::Configuration(QString name, QObject* parent)
     : Common::Configuration(name, parent),
@@ -20,6 +22,7 @@ Configuration::Configuration(QString name, QObject* parent)
       m_minuteColor(PROPERTY_MINUTE_COLOR_DEFAULT),
       m_secondColor(PROPERTY_SECOND_COLOR_DEFAULT),
       m_tickSoundFile(PROPERTY_TICK_SOUND_FILE_DEFAULT),
+      m_tackSoundFile(PROPERTY_TACK_SOUND_FILE_DEFAULT),
       m_hourlyChimeSoundFile(PROPERTY_HOURLY_CHIME_SOUND_FILE_DEFAULT)
 {
 }
@@ -31,6 +34,7 @@ QJsonObject Configuration::toJson() const
     json[PROPERTY_MINUTE_COLOR_KEY] = m_minuteColor.name();
     json[PROPERTY_SECOND_COLOR_KEY] = m_secondColor.name();
     json[PROPERTY_TICK_SOUND_FILE_KEY] = m_tickSoundFile;
+    json[PROPERTY_TACK_SOUND_FILE_KEY] = m_tackSoundFile;
     json[PROPERTY_HOURLY_CHIME_SOUND_FILE_KEY] = m_hourlyChimeSoundFile;
 
     return json;
@@ -51,6 +55,9 @@ void Configuration::fromJson(const QJsonObject& json)
     }
     if (json.contains(PROPERTY_TICK_SOUND_FILE_KEY)) {
         setTickSoundFile(json[PROPERTY_TICK_SOUND_FILE_KEY].toString());
+    }
+    if (json.contains(PROPERTY_TACK_SOUND_FILE_KEY)) {
+        setTackSoundFile(json[PROPERTY_TACK_SOUND_FILE_KEY].toString());
     }
     if (json.contains(PROPERTY_HOURLY_CHIME_SOUND_FILE_KEY)) {
         setHourlyChimeSoundFile(json[PROPERTY_HOURLY_CHIME_SOUND_FILE_KEY].toString());
@@ -117,6 +124,21 @@ void Configuration::setTickSoundFile(const QString& tickSoundFile)
     emit tickSoundFileChanged();
 }
 
+QString Configuration::tackSoundFile() const
+{
+    return m_tackSoundFile;
+}
+
+void Configuration::setTackSoundFile(const QString& tackSoundFile)
+{
+    if (m_tackSoundFile == tackSoundFile) {
+        return;
+    }
+
+    m_tackSoundFile = tackSoundFile;
+    emit tackSoundFileChanged();
+}
+
 QString Configuration::hourlyChimeSoundFile() const
 {
     return m_hourlyChimeSoundFile;
@@ -142,6 +164,7 @@ Configuration& Configuration::operator=(const Configuration& other)
         setMinuteColor(other.m_minuteColor);
         setSecondColor(other.m_secondColor);
         setTickSoundFile(other.m_tickSoundFile);
+        setTackSoundFile(other.m_tackSoundFile);
         setHourlyChimeSoundFile(other.m_hourlyChimeSoundFile);
     }
     return *this;
@@ -160,6 +183,7 @@ QDebug operator<<(QDebug debug, const Configuration& config)
                     << " - minuteColor=" << config.minuteColor() << "\n"
                     << " - secondColor=" << config.secondColor() << "\n"
                     << " - tickSoundFile=" << config.tickSoundFile() << "\n"
+                    << " - tackSoundFile=" << config.tackSoundFile() << "\n"
                     << " - hourlyChimeSoundFile=" << config.hourlyChimeSoundFile() << ")";
     return debug;
 }

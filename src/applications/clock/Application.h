@@ -34,6 +34,9 @@ class Application : public Common::Application
     void applyConfiguration(const Configuration& configuration);
     void applyConfiguration(const QJsonObject& configuration);
 
+  signals:
+    void ticked();
+
   private:
     void onTimerTick();
 
@@ -41,6 +44,7 @@ class Application : public Common::Application
     Services::Media::Service& m_media;
     Services::Audio::Service& m_audio;
     QTimer m_timer;
+    bool m_tickPhase; // true = tick, false = tack
 };
 } // namespace Applications::Clock
 

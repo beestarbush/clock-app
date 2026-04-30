@@ -14,7 +14,8 @@ Application::Application(const QString& id, Common::Type type, const QString& di
       m_configuration(new Configuration(id, parent)),
       m_media(media),
       m_audio(audio),
-      m_timer(this)
+      m_timer(this),
+      m_tickPhase(true)
 {
     // Refresh background when media sync completes
     connect(&m_media, &Services::Media::Service::syncCompleted, this, [this]() {
@@ -27,19 +28,29 @@ Application::Application(const QString& id, Common::Type type, const QString& di
 
 void Application::onTimerTick()
 {
+    emit ticked();
+
     QDateTime now = QDateTime::currentDateTime();
     int second = now.time().second();
     int minute = now.time().minute();
 
-    QString tickSound = m_configuration->tickSoundFile();
-    if (!tickSound.isEmpty()) {
-        m_audio.play(tickSound, Services::WebSocket::PlayMode::Concurrent);
+    // Alternate between tick and tack sound each second
+    QString sound = m_tickPhase ? m_configuration->tickSoundFile() : m_configuration->tackSoundFile();
+    if (!sound.isEmpty()) {
+        m_audio.play(sound, Services::WebSocket::PlayMode::Concurrent);
     }
+    m_tickPhase = !m_tickPhase;
 
     if (second == 0 && minute == 0) {
         QString chimeSound = m_configuration->hourlyChimeSoundFile();
         if (!chimeSound.isEmpty()) {
-            m_audio.play(chimeSound, Services::WebSocket::PlayMode::Concurrent);
+            // Convert to 12-hour format, treating 0 as 12
+            int hour = now.time().hour() % 12;
+            hour = hour == 0 ? 12 : hour;
+
+            for (int i = 0; i < hour; i++) {
+                m_audio.play(chimeSound, Services::WebSocket::PlayMode::Queue);
+            }
         }
     }
 }

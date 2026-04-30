@@ -1,8 +1,5 @@
 import QtQuick
 
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-
 Item {
 	id: pendulum
 
@@ -11,13 +8,10 @@ Item {
 	property alias bobColor: bob.color
 	property bool active: false
 
-	onActiveChanged: {
-		if (active) {
-			swingAnimation.start()
-		}
-		else {
-			swingAnimation.stop()
-		}
+	// Call this once per second from the clock app's ticked() signal
+	function tick() {
+		if (!active) return
+		swingAnimation.start()
 	}
 
 	Rectangle {
@@ -33,7 +27,7 @@ Item {
 			id: swing
 			origin.x: rod.width / 2
 			origin.y: 0
-			angle: 0
+			angle: pendulumAngle
 		}
 
 		Circle {
@@ -41,33 +35,18 @@ Item {
 			width: pendulum.height / 1.25
 			height: width
 			color: Color.green1
-			//anchors.top: rod.verticalCenter
 			anchors.top: rod.bottom
 			anchors.topMargin: -(height / 2)
 			anchors.horizontalCenter: parent.horizontalCenter
 		}
 
-		SequentialAnimation {
+		NumberAnimation {
 			id: swingAnimation
-			loops: Animation.Infinite
-
-			NumberAnimation {
-				target: swing
-				property: "angle"
-				from: pendulumAngle
-				to: -pendulumAngle
-				duration: 1000 // 1 second for the full swing
-				easing.type: Easing.InOutSine // Smooth easing for natural swing
-			}
-
-			NumberAnimation {
-				target: swing
-				property: "angle"
-				from: -pendulumAngle
-				to: pendulumAngle
-				duration: 1000 // 1 second for the return swing
-				easing.type: Easing.InOutSine // Smooth easing for natural swing
-			}
+			target: swing
+			property: "angle"
+			to: swing.angle > 0 ? -pendulumAngle : pendulumAngle
+			duration: 1000
+			easing.type: Easing.InOutSine
 		}
 	}
 }

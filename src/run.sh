@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd build
-./clock-app -platform xcb
+QT_LOGGING_RULES="WebSocketService.debug=false;EnvironmentService.debug=false" ./clock-app -platform xcb

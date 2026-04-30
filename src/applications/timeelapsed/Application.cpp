@@ -20,7 +20,7 @@ Application::Application(const QString& id, Common::Type type, const QString& di
       m_configuration(new Common::TimerConfiguration(id, parent)),
       m_media(media),
       m_audio(audio),
-      m_lastMilestoneHour(0),
+      m_reachedMilestones(),
       m_years(0),
       m_days(0),
       m_daysInWeek(0),
@@ -30,6 +30,8 @@ Application::Application(const QString& id, Common::Type type, const QString& di
       m_seconds(0),
       m_timer(this)
 {
+    initMilestones();
+
     startTimer();
 
     // Refresh background when media sync completes
@@ -68,6 +70,25 @@ void Application::startTimer()
     }
 }
 
+void Application::initMilestones()
+{
+    QDateTime now = QDateTime::currentDateTimeUtc();
+    QDateTime referenceDate = QDateTime::fromSecsSinceEpoch(m_configuration->timestamp());
+    qint64 diffSeconds = now.toSecsSinceEpoch() - referenceDate.toSecsSinceEpoch();
+    quint64 totalDays = static_cast<quint64>(diffSeconds / SECONDS_IN_A_DAY);
+
+    m_reachedMilestones.clear();
+    for (const Common::Milestone& milestone : m_configuration->milestones()) {
+        quint64 milestoneDays = (milestone.unit == "years")
+                                    ? milestone.value * DAYS_IN_YEAR
+                                    : milestone.value;
+        quint64 key = (milestone.unit == "years") ? (milestone.value * 10000 + 1) : (milestone.value * 10000);
+        if (totalDays >= milestoneDays) {
+            m_reachedMilestones.insert(key);
+        }
+    }
+}
+
 void Application::stopTimer()
 {
     if (m_timer.isActive()) {
@@ -92,13 +113,19 @@ void Application::calculateTimeElapsed()
     quint64 minutes = (diffSeconds % (SECONDS_IN_HOUR)) / SECONDS_IN_MINUTE;
     quint64 seconds = diffSeconds % SECONDS_IN_MINUTE;
 
-    quint64 totalHours = static_cast<quint64>(diffSeconds / SECONDS_IN_HOUR);
-    if (totalHours > 0 && totalHours > m_lastMilestoneHour) {
-        QString soundFile = m_configuration->soundFile();
-        if (!soundFile.isEmpty()) {
-            m_audio.play(soundFile, Services::WebSocket::PlayMode::Queue);
+    quint64 totalDays = static_cast<quint64>(diffSeconds / SECONDS_IN_A_DAY);
+    QString soundFile = m_configuration->soundFile();
+    if (!soundFile.isEmpty()) {
+        for (const Common::Milestone& milestone : m_configuration->milestones()) {
+            quint64 milestoneDays = (milestone.unit == "years")
+                                        ? milestone.value * DAYS_IN_YEAR
+                                        : milestone.value;
+            quint64 key = (milestone.unit == "years") ? (milestone.value * 10000 + 1) : (milestone.value * 10000);
+            if (totalDays >= milestoneDays && !m_reachedMilestones.contains(key)) {
+                m_reachedMilestones.insert(key);
+                m_audio.play(soundFile, Services::WebSocket::PlayMode::Queue);
+            }
         }
-        m_lastMilestoneHour = totalHours;
     }
 
     setYears(years);

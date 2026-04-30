@@ -10,8 +10,7 @@ using namespace Services::Audio;
 
 Service::Service(Services::WebSocket::Service& webSocket, QObject* parent)
     : QObject(parent),
-      m_webSocket(webSocket),
-      m_playing(false)
+      m_webSocket(webSocket)
 {
 }
 
@@ -37,22 +36,9 @@ void Service::stop()
                         });
 }
 
-bool Service::playing() const
-{
-    return m_playing;
-}
-
 QString Service::lastError() const
 {
     return m_lastError;
-}
-
-void Service::setPlaying(bool playing)
-{
-    if (m_playing != playing) {
-        m_playing = playing;
-        emit playingChanged();
-    }
 }
 
 void Service::setLastError(const QString& error)
@@ -68,20 +54,15 @@ void Service::onPlayResponse(bool success, const QJsonObject& result, const QStr
     Q_UNUSED(result);
 
     if (success) {
-        qCDebug(AudioService) << "Audio played:" << filename;
-        setPlaying(false);
         setLastError(QString());
         emit playbackStarted(filename);
     }
     else {
-        // Suppress "Disconnected" errors — these are transient (socket dropped mid-request)
-        // and not meaningful to the user. Real backend errors will have a descriptive message.
         if (error == QStringLiteral("Disconnected")) {
             qCDebug(AudioService) << "Audio request dropped due to disconnect, ignoring:" << filename;
             return;
         }
         qCWarning(AudioService) << "Failed to play audio" << filename << ":" << error;
-        setPlaying(false);
         setLastError(error);
         emit playbackFailed(filename, error);
     }
@@ -92,8 +73,6 @@ void Service::onStopResponse(bool success, const QJsonObject& result, const QStr
     Q_UNUSED(result);
 
     if (success) {
-        qCDebug(AudioService) << "Audio playback stopped";
-        setPlaying(false);
         setLastError(QString());
     }
     else {

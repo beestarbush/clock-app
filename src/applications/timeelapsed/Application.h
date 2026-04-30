@@ -4,6 +4,7 @@
 #include "applications/common/Application.h"
 #include "applications/common/TimerConfiguration.h"
 #include <QObject>
+#include <QSet>
 #include <QTimer>
 
 namespace Services::Media
@@ -61,6 +62,7 @@ class Application : public Common::Application
 
   private:
     void calculateTimeElapsed();
+    void initMilestones();
     void setYears(const quint64 years);
     void setDays(const quint64 days);
     void setDaysInWeek(const quint64 daysInWeek);
@@ -72,7 +74,7 @@ class Application : public Common::Application
     Common::TimerConfiguration* m_configuration;
     Services::Media::Service& m_media;
     Services::Audio::Service& m_audio;
-    quint64 m_lastMilestoneHour;
+    QSet<quint64> m_reachedMilestones;
 
     // Properties for indicating the elapsed time
     quint64 m_years;
