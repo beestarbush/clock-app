@@ -157,7 +157,10 @@ Panel {
         CanaryPanel {
             id: canaryPanel
 
-            currentApp: (currentAppValid && currentApp.watchface === Backend.Common.Watchface.CanaryFace) ? currentApp : null
+            currentApp: (watchfacesPanel.currentAppValid && watchfacesPanel.currentApp.watchface === Backend.Common.Watchface.CanaryFace) ? watchfacesPanel.currentApp : null
+            backgroundImage: (watchfacesPanel.currentAppValid && Backend.Services.media.getMediaPath(watchfacesPanel.currentApp.configuration.background)) || ""
+            backgroundOpacity: (watchfacesPanel.currentAppValid && watchfacesPanel.currentApp.configuration.backgroundOpacity) || 0
+            textColor: (watchfacesPanel.currentAppValid && watchfacesPanel.currentApp.configuration.accentColor) || "white"
             onClicked: watchfacesPanel.clicked()
         }
     }

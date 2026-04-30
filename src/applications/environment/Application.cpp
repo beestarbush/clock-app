@@ -11,12 +11,9 @@ Application::Application(const QString& id, Common::Type type, const QString& di
       m_configuration(new Configuration(id, this)),
       m_environment(environment)
 {
-    connect(&m_environment, &Services::Environment::Service::co2PartsPerMillionChanged,
-            this, &Application::co2PartsPerMillionChanged);
-    connect(&m_environment, &Services::Environment::Service::temperatureCelsiusChanged,
-            this, &Application::temperatureCelsiusChanged);
-    connect(&m_environment, &Services::Environment::Service::humidityPercentageChanged,
-            this, &Application::humidityPercentageChanged);
+    connect(&m_environment, &Services::Environment::Service::co2PartsPerMillionChanged, this, &Application::co2PartsPerMillionChanged);
+    connect(&m_environment, &Services::Environment::Service::temperatureCelsiusChanged, this, &Application::temperatureCelsiusChanged);
+    connect(&m_environment, &Services::Environment::Service::humidityPercentageChanged, this, &Application::humidityPercentageChanged);
 }
 
 Configuration* Application::configuration() const

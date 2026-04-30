@@ -19,4 +19,5 @@ qt_add_resources(ResourcesLib "icons"
 		Icons/wizard.svg
 		Icons/speaker.svg
 		Icons/power-off.svg
+		Icons/canary.png
 )

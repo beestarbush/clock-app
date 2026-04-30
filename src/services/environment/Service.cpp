@@ -15,8 +15,7 @@ Service::Service(Services::WebSocket::Service& webSocket, QObject* parent)
 {
     m_webSocket.subscribe(Services::WebSocket::Topic::Environment);
 
-    connect(&m_webSocket, &Services::WebSocket::Service::publishReceived,
-            this, &Service::onEnvironmentDataReceived);
+    connect(&m_webSocket, &Services::WebSocket::Service::publishReceived, this, &Service::onEnvironmentDataReceived);
 }
 
 double Service::co2PartsPerMillion() const
