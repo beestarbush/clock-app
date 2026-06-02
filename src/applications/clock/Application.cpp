@@ -28,7 +28,7 @@ Application::Application(const QString& id, Common::Type type, const QString& di
 
 void Application::onTimerTick()
 {
-    emit ticked();
+    emit ticked(m_tickPhase);
 
     QDateTime now = QDateTime::currentDateTime();
     int second = now.time().second();

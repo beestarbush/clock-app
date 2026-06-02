@@ -35,7 +35,7 @@ class Application : public Common::Application
     void applyConfiguration(const QJsonObject& configuration);
 
   signals:
-    void ticked();
+    void ticked(bool tickPhase);
 
   private:
     void onTimerTick();

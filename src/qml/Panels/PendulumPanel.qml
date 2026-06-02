@@ -33,6 +33,8 @@ RoundPanel {
 
     Connections {
         target: pendulumPanel.clockApp
-        function onTicked() { pendulum.tick() }
+        function onTicked(tickPhase) {
+            pendulum.tick(tickPhase)
+        }
     }
 }

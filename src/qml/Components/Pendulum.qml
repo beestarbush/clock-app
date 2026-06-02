@@ -7,10 +7,15 @@ Item {
 	property alias rodColor: rod.color
 	property alias bobColor: bob.color
 	property bool active: false
+	property bool swingPositive: true
 
 	// Call this once per second from the clock app's ticked() signal
-	function tick() {
-		if (!active) return
+	function tick(tickPhase) {
+		if (!active) {
+			return;
+		}
+		swingPositive = tickPhase
+		swingAnimation.stop()
 		swingAnimation.start()
 	}
 
@@ -44,7 +49,7 @@ Item {
 			id: swingAnimation
 			target: swing
 			property: "angle"
-			to: swing.angle > 0 ? -pendulumAngle : pendulumAngle
+			to: swingPositive ? pendulumAngle : -pendulumAngle
 			duration: 1000
 			easing.type: Easing.InOutSine
 		}
