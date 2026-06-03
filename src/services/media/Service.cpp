@@ -1,6 +1,6 @@
 #include "Service.h"
-#include "services/rest/Service.h"
-#include "services/websocket/Service.h"
+#include "rest/client/Service.h"
+#include "websocket/client/Service.h"
 #include <QDebug>
 #include <QDir>
 #include <QFile>
@@ -22,7 +22,7 @@ const QString DEFAULT_MEDIA = QStringLiteral("qrc:/media/default.gif");
 constexpr int MIN_MEDIA_FILE_SIZE = 50;     // Minimum reasonable file size in bytes
 constexpr int INITIAL_SYNC_DELAY_MS = 5000; // 5 seconds
 
-Service::Service(Services::WebSocket::Service& webSocket, Services::Rest::Service& rest, QObject* parent)
+Service::Service(Common::Communication::WebSocket::Client::Service& webSocket, Common::Communication::Rest::Client::Service& rest, QObject* parent)
     : QObject(parent),
       m_model(this),
       m_startupTimeoutTimer(this),
@@ -32,15 +32,15 @@ Service::Service(Services::WebSocket::Service& webSocket, Services::Rest::Servic
       m_startupCheckInProgress(false)
 {
     // Subscribe to media change notifications from backend
-    m_webSocket.subscribe(Services::WebSocket::Topic::Media);
-    connect(&m_webSocket, &Services::WebSocket::Service::publishReceived, this, [this](const Services::WebSocket::Topic& topic, const QJsonObject& data) {
-        if (topic == Services::WebSocket::Topic::Media) {
+    m_webSocket.subscribe(Common::Communication::WebSocket::Topic::Media);
+    connect(&m_webSocket, &Common::Communication::WebSocket::Client::Service::publishReceived, this, [this](const Common::Communication::WebSocket::Topic& topic, const QJsonObject& data) {
+        if (topic == Common::Communication::WebSocket::Topic::Media) {
             onMediaReceived(data);
         }
     });
-    connect(&m_webSocket, &Services::WebSocket::Service::connectedChanged, this, [this]() {
+    connect(&m_webSocket, &Common::Communication::WebSocket::Client::Service::connectedChanged, this, [this]() {
         if (m_webSocket.connected()) {
-            m_webSocket.request(Services::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+            m_webSocket.request(Common::Communication::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
                 if (success) {
                     onMediaReceived(result);
                 }
@@ -300,7 +300,7 @@ void Service::performStartupCheck()
 
     // If already connected, sync immediately
     if (m_webSocket.connected()) {
-        m_webSocket.request(Services::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+        m_webSocket.request(Common::Communication::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
             if (!success) {
                 completeSyncWithError("Failed to fetch media list: " + error);
                 return;
@@ -315,12 +315,12 @@ void Service::performStartupCheck()
     qCInfo(MediaService) << "Media: Waiting for WebSocket connection (max" << INITIAL_SYNC_DELAY_MS << "ms)...";
 
     m_startupConnectionWatcher = connect(&m_webSocket,
-                                         &Services::WebSocket::Service::connectedChanged,
+                                         &Common::Communication::WebSocket::Client::Service::connectedChanged,
                                          this,
                                          [this]() {
                                              if (m_webSocket.connected() && startupCheckInProgress()) {
                                                  disconnect(m_startupConnectionWatcher);
-                                                 m_webSocket.request(Services::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+                                                 m_webSocket.request(Common::Communication::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
                                                      if (success) {
                                                          onMediaReceived(result);
                                                      }

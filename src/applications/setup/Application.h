@@ -2,6 +2,7 @@
 #define APPS_SETUP_APPLICATION_H
 
 #include "applications/common/Types.h"
+#include "websocket/client/Service.h"
 #include <QColor>
 #include <QObject>
 #include <QString>
@@ -11,11 +12,6 @@ namespace Services::Configuration
 class Service;
 class DeviceConfiguration;
 } // namespace Services::Configuration
-
-namespace Services::WebSocket
-{
-class Service;
-}
 
 namespace Common
 {
@@ -103,7 +99,7 @@ class Application : public QObject
 
     Application(Common::DynamicApplicationMap& applications,
                 Services::Configuration::Service& configurationService,
-                Services::WebSocket::Service& webSocket,
+                Common::Communication::WebSocket::Client::Service& webSocket,
                 QObject* parent = nullptr);
 
     bool isSetupComplete() const;
@@ -199,7 +195,7 @@ class Application : public QObject
 
     // Services
     Services::Configuration::Service& m_configurationService;
-    Services::WebSocket::Service& m_webSocket;
+    Common::Communication::WebSocket::Client::Service& m_webSocket;
 
     // System configuration
     QColor m_pendulumBobColor;

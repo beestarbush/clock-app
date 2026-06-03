@@ -95,7 +95,7 @@ void Application::calculateTimeRemaining()
 
             QString soundFile = m_configuration->soundFile();
             if (!soundFile.isEmpty()) {
-                m_audio.play(soundFile, Services::WebSocket::PlayMode::Queue);
+                m_audio.play(soundFile, Common::Communication::WebSocket::PlayMode::Queue);
             }
 
             emit countdownFinished();

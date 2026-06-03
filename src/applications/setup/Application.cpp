@@ -3,7 +3,7 @@
 #include "applications/common/Configuration.h"
 #include "services/configuration/DeviceConfiguration.h"
 #include "services/configuration/Service.h"
-#include "services/websocket/Service.h"
+#include "websocket/client/Service.h"
 #include <QDate>
 #include <QDebug>
 #include <QJsonObject>
@@ -37,7 +37,7 @@ const QString PROPERTY_DEVICE_ID_DEFAULT = QStringLiteral("SN-XXXX");
 
 Application::Application(Common::DynamicApplicationMap& applications,
                          Services::Configuration::Service& configurationService,
-                         Services::WebSocket::Service& webSocket,
+                         Common::Communication::WebSocket::Client::Service& webSocket,
                          QObject* parent)
     : QObject(parent),
       m_setupComplete(PROPERTY_SETUP_COMPLETE_DEFAULT),
@@ -81,7 +81,7 @@ void Application::setDeviceId(const QString& id)
     // Send device ID update to backend
     QJsonObject params;
     params["device_id"] = id;
-    m_webSocket.request(Services::WebSocket::Method::SetDeviceId, params, [](bool success, const QJsonObject&, const QString& error) {
+    m_webSocket.request(Common::Communication::WebSocket::Method::SetDeviceId, params, [](bool success, const QJsonObject&, const QString& error) {
         if (!success) {
             qCWarning(SetupApplication) << "Failed to set device ID:" << error;
         }
@@ -497,7 +497,7 @@ void Application::setBrightness(int value)
     QJsonObject params;
     params["value"] = value;
 
-    m_webSocket.request(Services::WebSocket::Method::SetBrightness, params, [](bool, const QJsonObject&, const QString&) {
+    m_webSocket.request(Common::Communication::WebSocket::Method::SetBrightness, params, [](bool, const QJsonObject&, const QString&) {
         // fire-and-forget passthrough
     });
 
@@ -519,7 +519,7 @@ void Application::setVolume(int value)
     QJsonObject params;
     params["value"] = value;
 
-    m_webSocket.request(Services::WebSocket::Method::SetVolume, params, [](bool, const QJsonObject&, const QString&) {
+    m_webSocket.request(Common::Communication::WebSocket::Method::SetVolume, params, [](bool, const QJsonObject&, const QString&) {
         // fire-and-forget passthrough
     });
 

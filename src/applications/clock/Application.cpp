@@ -37,7 +37,7 @@ void Application::onTimerTick()
     // Alternate between tick and tack sound each second
     QString sound = m_tickPhase ? m_configuration->tickSoundFile() : m_configuration->tackSoundFile();
     if (!sound.isEmpty()) {
-        m_audio.play(sound, Services::WebSocket::PlayMode::Concurrent);
+        m_audio.play(sound, Common::Communication::WebSocket::PlayMode::Concurrent);
     }
     m_tickPhase = !m_tickPhase;
 
@@ -49,7 +49,7 @@ void Application::onTimerTick()
             hour = hour == 0 ? 12 : hour;
 
             for (int i = 0; i < hour; i++) {
-                m_audio.play(chimeSound, Services::WebSocket::PlayMode::Queue);
+                m_audio.play(chimeSound, Common::Communication::WebSocket::PlayMode::Queue);
             }
         }
     }

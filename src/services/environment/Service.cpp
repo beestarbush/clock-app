@@ -1,21 +1,21 @@
 #include "Service.h"
-#include "services/websocket/Service.h"
+#include "websocket/client/Service.h"
 #include <QLoggingCategory>
 
 Q_LOGGING_CATEGORY(EnvironmentService, "EnvironmentService")
 
 using namespace Services::Environment;
 
-Service::Service(Services::WebSocket::Service& webSocket, QObject* parent)
+Service::Service(Common::Communication::WebSocket::Client::Service& webSocket, QObject* parent)
     : QObject(parent),
       m_webSocket(webSocket),
       m_co2PartsPerMillion(0.0),
       m_temperatureCelsius(0.0),
       m_humidityPercentage(0.0)
 {
-    m_webSocket.subscribe(Services::WebSocket::Topic::Environment);
+    m_webSocket.subscribe(Common::Communication::WebSocket::Topic::Environment);
 
-    connect(&m_webSocket, &Services::WebSocket::Service::publishReceived, this, &Service::onEnvironmentDataReceived);
+    connect(&m_webSocket, &Common::Communication::WebSocket::Client::Service::publishReceived, this, &Service::onEnvironmentDataReceived);
 }
 
 double Service::co2PartsPerMillion() const
@@ -33,9 +33,9 @@ double Service::humidityPercentage() const
     return m_humidityPercentage;
 }
 
-void Service::onEnvironmentDataReceived(const Services::WebSocket::Topic& topic, const QJsonObject& data)
+void Service::onEnvironmentDataReceived(const Common::Communication::WebSocket::Topic& topic, const QJsonObject& data)
 {
-    if (topic != Services::WebSocket::Topic::Environment) {
+    if (topic != Common::Communication::WebSocket::Topic::Environment) {
         return;
     }
 

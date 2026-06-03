@@ -1,13 +1,13 @@
 #include "Application.h"
-#include "services/websocket/Service.h"
-#include "services/websocket/Types.h"
+#include "websocket/Types.h"
+#include "websocket/client/Service.h"
 #include <QLoggingCategory>
 
 Q_LOGGING_CATEGORY(MenuApplication, "MenuApplication")
 
 using namespace Applications::Menu;
 
-Application::Application(Services::WebSocket::Service& websocket, QObject* parent)
+Application::Application(Common::Communication::WebSocket::Client::Service& websocket, QObject* parent)
     : QObject(parent),
       m_main(this),
       m_dialog(None),
@@ -92,7 +92,7 @@ void Application::dialWheelValueChanged(int value)
 
 void Application::shutdown()
 {
-    m_websocket.request(Services::WebSocket::Method::Shutdown, QJsonObject(), [](bool success, const QJsonObject&, const QString& error) {
+    m_websocket.request(Common::Communication::WebSocket::Method::Shutdown, QJsonObject(), [](bool success, const QJsonObject&, const QString& error) {
         if (success) {
             qCInfo(MenuApplication) << "System shutdown initiated";
         }

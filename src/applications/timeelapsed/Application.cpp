@@ -123,7 +123,7 @@ void Application::calculateTimeElapsed()
             quint64 key = (milestone.unit == "years") ? (milestone.value * 10000 + 1) : (milestone.value * 10000);
             if (totalDays >= milestoneDays && !m_reachedMilestones.contains(key)) {
                 m_reachedMilestones.insert(key);
-                m_audio.play(soundFile, Services::WebSocket::PlayMode::Queue);
+                m_audio.play(soundFile, Common::Communication::WebSocket::PlayMode::Queue);
             }
         }
     }

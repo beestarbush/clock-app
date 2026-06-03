@@ -2,16 +2,12 @@
 #define SERVICES_CONFIGURATION_SERVICE_H
 
 #include "applications/common/Types.h"
+#include "websocket/client/Service.h"
 #include <QDateTime>
 #include <QObject>
 #include <QTimer>
 
 #include "DeviceConfiguration.h"
-
-namespace Services::WebSocket
-{
-class Service;
-}
 
 namespace Services::Configuration
 {
@@ -24,7 +20,7 @@ class Service : public QObject
     Q_PROPERTY(bool startupCheckInProgress READ startupCheckInProgress NOTIFY startupCheckInProgressChanged)
 
   public:
-    explicit Service(Services::WebSocket::Service& webSocket, QObject* parent = nullptr);
+    explicit Service(Common::Communication::WebSocket::Client::Service& webSocket, QObject* parent = nullptr);
 
     DeviceConfiguration* getCurrentConfiguration();
 
@@ -57,7 +53,7 @@ class Service : public QObject
     // Slot for incoming config data
     void onConfigurationReceived(const QJsonObject& configJson);
 
-    Services::WebSocket::Service& m_webSocket;
+    Common::Communication::WebSocket::Client::Service& m_webSocket;
     QTimer m_startupTimeoutTimer;
     QMetaObject::Connection m_startupConnectionWatcher;
 

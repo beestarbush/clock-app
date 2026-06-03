@@ -3,7 +3,7 @@
 
 #include "Configuration.h"
 #include "applications/common/Application.h"
-#include "services/websocket/Types.h"
+#include "websocket/Types.h"
 #include <QObject>
 #include <QTimer>
 

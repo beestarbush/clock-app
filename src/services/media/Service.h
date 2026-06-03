@@ -2,20 +2,13 @@
 #define SERVICES_MEDIA_SERVICE_H
 
 #include "Model.h"
+#include "rest/client/Service.h"
+#include "websocket/client/Service.h"
 #include <QDateTime>
 #include <QMetaObject>
 #include <QObject>
 #include <QStringList>
 #include <QTimer>
-
-namespace Services::WebSocket
-{
-class Service;
-}
-namespace Services::Rest
-{
-class Service;
-}
 
 namespace Services::Media
 {
@@ -28,7 +21,7 @@ class Service : public QObject
     Q_PROPERTY(bool startupCheckInProgress READ startupCheckInProgress NOTIFY startupCheckInProgressChanged)
 
   public:
-    explicit Service(Services::WebSocket::Service& webSocket, Services::Rest::Service& rest, QObject* parent = nullptr);
+    explicit Service(Common::Communication::WebSocket::Client::Service& webSocket, Common::Communication::Rest::Client::Service& rest, QObject* parent = nullptr);
 
     Model* model();
     bool syncing() const;
@@ -61,8 +54,8 @@ class Service : public QObject
 
     Model m_model;
     QTimer m_startupTimeoutTimer;
-    Services::WebSocket::Service& m_webSocket;
-    Services::Rest::Service& m_rest; // Kept for binary file downloads only
+    Common::Communication::WebSocket::Client::Service& m_webSocket;
+    Common::Communication::Rest::Client::Service& m_rest; // Kept for binary file downloads only
 
     bool m_syncing;
     bool m_startupCheckInProgress;

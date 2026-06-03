@@ -1,7 +1,7 @@
 #include "Service.h"
 #include "applications/common/Application.h"
 #include "applications/common/Configuration.h"
-#include "services/websocket/Service.h"
+#include "websocket/client/Service.h"
 #include <QDebug>
 #include <QJsonObject>
 #include <QLoggingCategory>
@@ -18,7 +18,7 @@ const QString CONFIGURATION_PATH = QStringLiteral("/workdir/build/bee/configurat
 
 constexpr int STARTUP_CHECK_TIMEOUT_MS = 10000; // 10 seconds
 
-Service::Service(Services::WebSocket::Service& webSocket, QObject* parent)
+Service::Service(Common::Communication::WebSocket::Client::Service& webSocket, QObject* parent)
     : QObject(parent),
       m_webSocket(webSocket),
       m_startupTimeoutTimer(this),
@@ -27,15 +27,15 @@ Service::Service(Services::WebSocket::Service& webSocket, QObject* parent)
       m_currentConfig(nullptr)
 {
     // Subscribe to config change notifications
-    m_webSocket.subscribe(Services::WebSocket::Topic::Configuration);
-    connect(&m_webSocket, &Services::WebSocket::Service::publishReceived, this, [this](const Services::WebSocket::Topic& topic, const QJsonObject& data) {
-        if (topic == Services::WebSocket::Topic::Configuration) {
+    m_webSocket.subscribe(Common::Communication::WebSocket::Topic::Configuration);
+    connect(&m_webSocket, &Common::Communication::WebSocket::Client::Service::publishReceived, this, [this](const Common::Communication::WebSocket::Topic& topic, const QJsonObject& data) {
+        if (topic == Common::Communication::WebSocket::Topic::Configuration) {
             onConfigurationReceived(data);
         }
     });
-    connect(&m_webSocket, &Services::WebSocket::Service::connectedChanged, this, [this]() {
+    connect(&m_webSocket, &Common::Communication::WebSocket::Client::Service::connectedChanged, this, [this]() {
         if (m_webSocket.connected()) {
-            m_webSocket.request(Services::WebSocket::Method::GetConfig, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+            m_webSocket.request(Common::Communication::WebSocket::Method::GetConfig, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
                 if (success) {
                     onConfigurationReceived(result);
                 }
@@ -112,7 +112,7 @@ void Service::performStartupCheck()
 
     // If already connected, request config immediately
     if (m_webSocket.connected()) {
-        m_webSocket.request(Services::WebSocket::Method::GetConfig, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+        m_webSocket.request(Common::Communication::WebSocket::Method::GetConfig, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
             if (!success) {
                 qCWarning(ConfigurationService) << "Failed to get config:" << error;
                 return;
@@ -126,12 +126,12 @@ void Service::performStartupCheck()
     qCInfo(ConfigurationService) << "Waiting for WebSocket connection (max" << STARTUP_CHECK_TIMEOUT_MS << "ms)...";
 
     m_startupConnectionWatcher = connect(&m_webSocket,
-                                         &Services::WebSocket::Service::connectedChanged,
+                                         &Common::Communication::WebSocket::Client::Service::connectedChanged,
                                          this,
                                          [this]() {
                                              if (m_webSocket.connected() && startupCheckInProgress()) {
                                                  disconnect(m_startupConnectionWatcher);
-                                                 m_webSocket.request(Services::WebSocket::Method::GetConfig, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
+                                                 m_webSocket.request(Common::Communication::WebSocket::Method::GetConfig, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {
                                                      if (success) {
                                                          onConfigurationReceived(result);
                                                      }

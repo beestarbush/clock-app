@@ -5,13 +5,10 @@
 #include <QString>
 #include <QVariant>
 
+#include "websocket/client/Service.h"
+
 #include "Item.h"
 #include "Model.h"
-
-namespace Services::WebSocket
-{
-class Service;
-}
 
 namespace Applications::Menu
 {
@@ -51,7 +48,7 @@ class Application : public QObject
     };
     Q_ENUM(DialogType)
 
-    Application(Services::WebSocket::Service& websocket, QObject* parent = nullptr);
+    Application(Common::Communication::WebSocket::Client::Service& websocket, QObject* parent = nullptr);
 
     Menu::Model* main();
 
@@ -75,7 +72,7 @@ class Application : public QObject
     DialogType m_dialog;
     int m_dialogParam;
 
-    Services::WebSocket::Service& m_websocket;
+    Common::Communication::WebSocket::Client::Service& m_websocket;
 
     // Store menu items to manage lifetime - sized using enum counts
     Menu::Item m_mainItems[MainMenuCount];

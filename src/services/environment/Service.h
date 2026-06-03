@@ -1,14 +1,10 @@
 #ifndef SERVICES_ENVIRONMENT_SERVICE_H
 #define SERVICES_ENVIRONMENT_SERVICE_H
 
-#include "services/websocket/Types.h"
+#include "websocket/Types.h"
+#include "websocket/client/Service.h"
 #include <QJsonObject>
 #include <QObject>
-
-namespace Services::WebSocket
-{
-class Service;
-}
 
 namespace Services::Environment
 {
@@ -20,7 +16,7 @@ class Service : public QObject
     Q_PROPERTY(double humidityPercentage READ humidityPercentage NOTIFY humidityPercentageChanged)
 
   public:
-    explicit Service(Services::WebSocket::Service& webSocket, QObject* parent = nullptr);
+    explicit Service(Common::Communication::WebSocket::Client::Service& webSocket, QObject* parent = nullptr);
 
     double co2PartsPerMillion() const;
     double temperatureCelsius() const;
@@ -32,9 +28,9 @@ class Service : public QObject
     void humidityPercentageChanged();
 
   private:
-    void onEnvironmentDataReceived(const Services::WebSocket::Topic& topic, const QJsonObject& data);
+    void onEnvironmentDataReceived(const Common::Communication::WebSocket::Topic& topic, const QJsonObject& data);
 
-    Services::WebSocket::Service& m_webSocket;
+    Common::Communication::WebSocket::Client::Service& m_webSocket;
     double m_co2PartsPerMillion;
     double m_temperatureCelsius;
     double m_humidityPercentage;

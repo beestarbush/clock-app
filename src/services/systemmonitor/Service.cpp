@@ -2,8 +2,8 @@
 #include "git_version.h"
 #include "services/notification/Service.h"
 #include "services/version/Service.h"
-#include "services/websocket/Service.h"
-#include "services/websocket/Types.h"
+#include "websocket/Types.h"
+#include "websocket/client/Service.h"
 
 #include <QDebug>
 #include <QJsonObject>
@@ -16,7 +16,7 @@ using namespace Services::SystemMonitor;
 constexpr int MONITOR_INTERVAL = 10 * 1000;    // 10 seconds
 constexpr int REPORT_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
-Service::Service(Services::WebSocket::Service& webSocket,
+Service::Service(Common::Communication::WebSocket::Client::Service& webSocket,
                  Version::Service& version,
                  Notification::Service& notificationManager,
                  QObject* parent)
@@ -28,9 +28,9 @@ Service::Service(Services::WebSocket::Service& webSocket,
       m_isReporting(false)
 {
     // Subscribe to processor temperature data from backend
-    m_webSocket.subscribe(Services::WebSocket::Topic::ProcessorTemperature);
-    connect(&m_webSocket, &Services::WebSocket::Service::publishReceived, this, [this](const Services::WebSocket::Topic& topic, const QJsonObject& data) {
-        if (topic == Services::WebSocket::Topic::ProcessorTemperature) {
+    m_webSocket.subscribe(Common::Communication::WebSocket::Topic::ProcessorTemperature);
+    connect(&m_webSocket, &Common::Communication::WebSocket::Client::Service::publishReceived, this, [this](const Common::Communication::WebSocket::Topic& topic, const QJsonObject& data) {
+        if (topic == Common::Communication::WebSocket::Topic::ProcessorTemperature) {
             onProcessorTemperatureReceived(data);
         }
     });
@@ -47,10 +47,10 @@ Service::Service(Services::WebSocket::Service& webSocket,
     connect(&m_reportTimer, &QTimer::timeout, this, &Service::report);
 
     // Start reporting once WebSocket is connected
-    connect(&m_webSocket, &Services::WebSocket::Service::connectedChanged, this, [this]() {
+    connect(&m_webSocket, &Common::Communication::WebSocket::Client::Service::connectedChanged, this, [this]() {
         if (m_webSocket.connected()) {
             // Fetch initial processor temperature
-            m_webSocket.request(Services::WebSocket::Method::GetProcessorTemperature, {}, [this](bool success, const QJsonObject& response, const QString&) {
+            m_webSocket.request(Common::Communication::WebSocket::Method::GetProcessorTemperature, {}, [this](bool success, const QJsonObject& response, const QString&) {
                 if (success && response.contains("processor_temperature")) {
                     onProcessorTemperatureReceived(response);
                 }
@@ -89,6 +89,6 @@ void Service::report()
 {
     QJsonObject status;
     status["version"] = m_version.tag();
-    m_webSocket.publish(Services::WebSocket::Topic::ApplicationStatus, status);
+    m_webSocket.publish(Common::Communication::WebSocket::Topic::ApplicationStatus, status);
     qCDebug(SystemMonitorService) << "Published status update to backend";
 }

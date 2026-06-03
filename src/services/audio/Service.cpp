@@ -1,5 +1,5 @@
 #include "Service.h"
-#include "services/websocket/Service.h"
+#include "websocket/client/Service.h"
 
 #include <QDebug>
 #include <QLoggingCategory>
@@ -8,19 +8,19 @@ Q_LOGGING_CATEGORY(AudioService, "AudioService")
 
 using namespace Services::Audio;
 
-Service::Service(Services::WebSocket::Service& webSocket, QObject* parent)
+Service::Service(Common::Communication::WebSocket::Client::Service& webSocket, QObject* parent)
     : QObject(parent),
       m_webSocket(webSocket)
 {
 }
 
-void Service::play(const QString& filename, Services::WebSocket::PlayMode mode)
+void Service::play(const QString& filename, Common::Communication::WebSocket::PlayMode mode)
 {
     QJsonObject params;
     params["filename"] = filename;
-    params["mode"] = playModeToString(mode);
+    params["mode"] = Common::Communication::WebSocket::playModeToString(mode);
 
-    m_webSocket.request(Services::WebSocket::Method::PlaySound,
+    m_webSocket.request(Common::Communication::WebSocket::Method::PlaySound,
                         params,
                         [this, filename](bool success, const QJsonObject& result, const QString& error) {
                             onPlayResponse(success, result, error, filename);
@@ -29,7 +29,7 @@ void Service::play(const QString& filename, Services::WebSocket::PlayMode mode)
 
 void Service::stop()
 {
-    m_webSocket.request(Services::WebSocket::Method::StopSound,
+    m_webSocket.request(Common::Communication::WebSocket::Method::StopSound,
                         QJsonObject{},
                         [this](bool success, const QJsonObject& result, const QString& error) {
                             onStopResponse(success, result, error);

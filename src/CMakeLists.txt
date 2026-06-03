@@ -8,6 +8,12 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Network WebSockets)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(QRENCODE REQUIRED libqrencode)
 
+set(CLOCK_COMMON_LIBRARIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libraries)
+if (NOT EXISTS ${CLOCK_COMMON_LIBRARIES_DIR}/CMakeLists.txt)
+    message(FATAL_ERROR "ClockCommonLibraries not found. Expected submodule at ${CLOCK_COMMON_LIBRARIES_DIR}.")
+endif()
+add_subdirectory(${CLOCK_COMMON_LIBRARIES_DIR} ${CMAKE_CURRENT_BINARY_DIR}/clock-common-libraries-build)
+
 qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(clock-app
@@ -47,11 +53,6 @@ qt_add_executable(clock-app
     services/notification/Service.h
     services/qmlinterface/Service.cpp
     services/qmlinterface/Service.h
-    services/rest/Service.h
-    services/rest/Service.cpp
-    services/websocket/Service.h
-    services/websocket/Service.cpp
-    services/websocket/Types.h
     services/systemmonitor/Service.cpp
     services/systemmonitor/Service.h
     services/version/Service.cpp
@@ -139,7 +140,16 @@ set_target_properties(clock-app PROPERTIES
 )
 
 target_link_libraries(clock-app
-    PRIVATE Qt6::Quick Qt6::Network Qt6::WebSockets MainLibplugin ComponentLibplugin PanelLibplugin ResourcesLibplugin ${QRENCODE_LIBRARIES}
+    PRIVATE
+        clock_common::communication
+        Qt6::Quick
+        Qt6::Network
+        Qt6::WebSockets
+        MainLibplugin
+        ComponentLibplugin
+        PanelLibplugin
+        ResourcesLibplugin
+        ${QRENCODE_LIBRARIES}
 )
 
 include(GNUInstallDirs)

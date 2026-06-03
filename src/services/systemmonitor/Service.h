@@ -1,13 +1,9 @@
 #ifndef SERVICES_SYSTEMMONITOR_SERVICE_H
 #define SERVICES_SYSTEMMONITOR_SERVICE_H
 
+#include "websocket/client/Service.h"
 #include <QObject>
 #include <QTimer>
-
-namespace Services::WebSocket
-{
-class Service;
-}
 namespace Services::Version
 {
 class Service;
@@ -31,7 +27,7 @@ class Service : public QObject
     Q_OBJECT
 
   public:
-    explicit Service(Services::WebSocket::Service& webSocket,
+    explicit Service(Common::Communication::WebSocket::Client::Service& webSocket,
                      Services::Version::Service& version,
                      Services::Notification::Service& notificationManager,
                      QObject* parent = nullptr);
@@ -41,7 +37,7 @@ class Service : public QObject
     void report();
     void onProcessorTemperatureReceived(const QJsonObject& data);
 
-    Services::WebSocket::Service& m_webSocket;
+    Common::Communication::WebSocket::Client::Service& m_webSocket;
     Services::Version::Service& m_version;
     Services::Notification::Service& m_notificationManager;
 
