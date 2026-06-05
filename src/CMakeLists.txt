@@ -117,7 +117,7 @@ qt_add_resources(clock-app "media"
         "media/default.gif"
 )
 
-if (CMAKE_CXX_COMPILER MATCHES "aarch64-poky-linux")
+if (CMAKE_CROSSCOMPILING OR CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|arm)")
     set(PLATFORM "target")
     add_definitions(-DPLATFORM_IS_TARGET)
 elseif(UNIX AND NOT APPLE)

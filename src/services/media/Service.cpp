@@ -114,7 +114,9 @@ bool Service::isValidFile(const QString& filePath) const
 
 QString Service::getMediaDirectory() const
 {
-    return MEDIA_PATH;
+    const QString mediaDir = QDir(MEDIA_PATH).absolutePath();
+    qCDebug(MediaService) << "Resolved media directory:" << mediaDir;
+    return mediaDir;
 }
 
 void Service::onMediaReceived(const QJsonObject& data)
@@ -142,7 +144,8 @@ void Service::syncWithServerFiles(const QStringList& serverFilenames)
     QString mediaDir = getMediaDirectory();
     QDir dir(mediaDir);
     if (!dir.exists()) {
-        dir.mkpath(mediaDir);
+        const bool created = dir.mkpath(mediaDir);
+        qCDebug(MediaService) << "Media directory missing, create result=" << created << "path=" << mediaDir;
     }
     QStringList localFilenames = dir.entryList(QDir::Files);
 
@@ -162,6 +165,11 @@ void Service::syncWithServerFiles(const QStringList& serverFilenames)
             }
         }
     }
+
+    qCDebug(MediaService) << "Media sync counts server=" << serverFilenames.size()
+                          << "local=" << localFilenames.size()
+                          << "download=" << mediaToDownload.size()
+                          << "delete=" << mediaToDelete.size();
 
     // Delete removed files and update model
     for (const QString& file : mediaToDelete) {
@@ -205,6 +213,7 @@ void Service::downloadMedia(const QString& filename)
 {
     // Binary file download still uses REST
     QString endpoint = "media/" + filename;
+    qCDebug(MediaService) << "Starting media download filename=" << filename << "endpoint=" << endpoint;
 
     m_rest.download(endpoint, [this, filename](bool success, const QByteArray& data, const QString& error) {
         m_pendingDownloads.removeOne(filename);
@@ -220,12 +229,14 @@ void Service::downloadMedia(const QString& filename)
             return;
         }
 
+        qCDebug(MediaService) << "Download completed filename=" << filename << "bytes=" << data.size();
+
         QString filePath = getMediaDirectory() + "/" + filename;
         QFile file(filePath);
         if (file.open(QIODevice::WriteOnly)) {
             file.write(data);
             file.close();
-            qCDebug(MediaService) << "Downloaded:" << filename;
+            qCDebug(MediaService) << "Stored media file:" << filePath;
 
             // Construct and add Item directly to the model
             QFileInfo fileInfo(filePath);
