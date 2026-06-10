@@ -80,6 +80,11 @@ QString Service::getMediaPath(const QString& name) const
         return QString();
     }
 
+    // Avoid warning spam for the known default placeholder from configuration.
+    if (name == QStringLiteral("default.gif")) {
+        return DEFAULT_MEDIA;
+    }
+
     QString mediaDir = getMediaDirectory();
     QString fullPath = QDir(mediaDir).absoluteFilePath(name);
 
@@ -115,7 +120,6 @@ bool Service::isValidFile(const QString& filePath) const
 QString Service::getMediaDirectory() const
 {
     const QString mediaDir = QDir(MEDIA_PATH).absolutePath();
-    qCDebug(MediaService) << "Resolved media directory:" << mediaDir;
     return mediaDir;
 }
 

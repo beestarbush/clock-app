@@ -22,9 +22,9 @@ Container::Container(Services::Container& services, QObject* parent)
                                     this,
                                     [this, &services](const QJsonObject& payload) {
                                         const QJsonArray applications = payload.value("applications").toArray();
-        qCInfo(ApplicationContainer) << "Application list changed, applying incremental update";
-        applyApplicationList(applications, *services.m_websocket, *services.m_media, *services.m_audio, *services.m_dateTime, *services.m_environment);
-    });
+                                        qCInfo(ApplicationContainer) << "Application list changed, applying incremental update";
+                                        applyApplicationList(applications, *services.m_websocket, *services.m_media, *services.m_audio, *services.m_dateTime, *services.m_environment);
+                                    });
 
     connect(services.m_configuration, &Services::Configuration::Service::systemConfigChanged, this, [this](const QString& deviceId, const QJsonObject& systemConfig) {
         applySystemConfiguration(deviceId, systemConfig);
