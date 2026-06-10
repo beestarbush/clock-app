@@ -13,9 +13,12 @@ Service::Service(Common::Communication::WebSocket::Client::Service& webSocket, Q
       m_temperatureCelsius(0.0),
       m_humidityPercentage(0.0)
 {
-    m_webSocket.subscribe(Common::Communication::WebSocket::Topic::Environment);
-
-    connect(&m_webSocket, &Common::Communication::WebSocket::Client::Service::publishReceived, this, &Service::onEnvironmentDataReceived);
+    m_webSocket.subscribe(Common::Communication::WebSocket::Topic::Environment,
+                          QJsonObject(),
+                          this,
+                          [this](const QJsonObject& data) {
+                              onEnvironmentDataReceived(data);
+                          });
 }
 
 double Service::co2PartsPerMillion() const
@@ -33,12 +36,8 @@ double Service::humidityPercentage() const
     return m_humidityPercentage;
 }
 
-void Service::onEnvironmentDataReceived(const Common::Communication::WebSocket::Topic& topic, const QJsonObject& data)
+void Service::onEnvironmentDataReceived(const QJsonObject& data)
 {
-    if (topic != Common::Communication::WebSocket::Topic::Environment) {
-        return;
-    }
-
     qCDebug(EnvironmentService) << "Environment data received:" << data;
 
     if (data.contains("co2_parts_per_million")) {

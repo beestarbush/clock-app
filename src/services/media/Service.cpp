@@ -32,12 +32,12 @@ Service::Service(Common::Communication::WebSocket::Client::Service& webSocket, C
       m_startupCheckInProgress(false)
 {
     // Subscribe to media change notifications from backend
-    m_webSocket.subscribe(Common::Communication::WebSocket::Topic::Media);
-    connect(&m_webSocket, &Common::Communication::WebSocket::Client::Service::publishReceived, this, [this](const Common::Communication::WebSocket::Topic& topic, const QJsonObject& data) {
-        if (topic == Common::Communication::WebSocket::Topic::Media) {
-            onMediaReceived(data);
-        }
-    });
+    m_webSocket.subscribe(Common::Communication::WebSocket::Topic::Media,
+                          QJsonObject(),
+                          this,
+                          [this](const QJsonObject& data) {
+                              onMediaReceived(data);
+                          });
     connect(&m_webSocket, &Common::Communication::WebSocket::Client::Service::connectedChanged, this, [this]() {
         if (m_webSocket.connected()) {
             m_webSocket.request(Common::Communication::WebSocket::Method::GetMedia, QJsonObject(), [this](bool success, const QJsonObject& result, const QString& error) {

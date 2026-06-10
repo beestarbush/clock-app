@@ -1,16 +1,26 @@
 #include "Application.h"
 #include "services/environment/Service.h"
+#include "websocket/Types.h"
+#include "websocket/client/Service.h"
+#include <QJsonObject>
 #include <QLoggingCategory>
 
 Q_LOGGING_CATEGORY(EnvironmentApplication, "EnvironmentApplication")
 
 using namespace Applications::Environment;
 
-Application::Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Environment::Service& environment, QObject* parent)
+Application::Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Environment::Service& environment, Common::Communication::WebSocket::Client::Service& webSocket, QObject* parent)
     : Common::Application(id, type, displayName, order, watchface, parent),
       m_configuration(new Configuration(id, this)),
       m_environment(environment)
 {
+    webSocket.subscribe(Common::Communication::WebSocket::Topic::ApplicationDetail,
+                        QJsonObject{{"id", id}},
+                        this,
+                        [this](const QJsonObject& payload) {
+                            applyConfiguration(payload);
+                        });
+
     connect(&m_environment, &Services::Environment::Service::co2PartsPerMillionChanged, this, &Application::co2PartsPerMillionChanged);
     connect(&m_environment, &Services::Environment::Service::temperatureCelsiusChanged, this, &Application::temperatureCelsiusChanged);
     connect(&m_environment, &Services::Environment::Service::humidityPercentageChanged, this, &Application::humidityPercentageChanged);

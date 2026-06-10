@@ -10,6 +10,11 @@ namespace Services::Media
 class Service;
 }
 
+namespace Common::Communication::WebSocket::Client
+{
+class Service;
+}
+
 namespace Applications::NoOperation
 {
 class Application : public Common::Application
@@ -18,7 +23,7 @@ class Application : public Common::Application
     Q_PROPERTY(Common::Configuration* configuration READ configuration CONSTANT)
 
   public:
-    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, QObject* parent = nullptr);
+    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Common::Communication::WebSocket::Client::Service& webSocket, QObject* parent = nullptr);
 
     Common::Configuration* configuration() const override;
 

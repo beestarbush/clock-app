@@ -1,9 +1,9 @@
 #include "Container.h"
 #include "services/Container.h"
-#include "services/configuration/DeviceConfiguration.h"
 #include "services/environment/Service.h"
 #include <QDebug>
 #include <QLoggingCategory>
+#include <QSet>
 
 Q_LOGGING_CATEGORY(ApplicationContainer, "ApplicationContainer")
 
@@ -17,16 +17,18 @@ Container::Container(Services::Container& services, QObject* parent)
       m_menu(new Menu::Application(*services.m_websocket, this)),
       m_watchface(new Watchface::Application(m_applications, this))
 {
-    connect(services.m_configuration, &Services::Configuration::Service::configurationChanged, this, [this, &services]() {
-        qCInfo(ApplicationContainer) << "Configuration changed, reloading applications";
-        reload(*services.m_configuration, *services.m_media, *services.m_audio, *services.m_dateTime, *services.m_environment);
+    services.m_websocket->subscribe(Common::Communication::WebSocket::Topic::ApplicationList,
+                                    QJsonObject(),
+                                    this,
+                                    [this, &services](const QJsonObject& payload) {
+                                        const QJsonArray applications = payload.value("applications").toArray();
+        qCInfo(ApplicationContainer) << "Application list changed, applying incremental update";
+        applyApplicationList(applications, *services.m_websocket, *services.m_media, *services.m_audio, *services.m_dateTime, *services.m_environment);
     });
 
-    // When startup check is already completed, reload immediately to apply initial configuration (if any present).
-    if (!services.m_configuration->startupCheckInProgress() &&
-        !services.m_media->startupCheckInProgress()) {
-        reload(*services.m_configuration, *services.m_media, *services.m_audio, *services.m_dateTime, *services.m_environment);
-    }
+    connect(services.m_configuration, &Services::Configuration::Service::systemConfigChanged, this, [this](const QString& deviceId, const QJsonObject& systemConfig) {
+        applySystemConfiguration(deviceId, systemConfig);
+    });
 
     auto notification = services.m_notification;
     notification->showInfo("Clock started", "The clock is ready to use.", false);
@@ -45,87 +47,90 @@ void Container::setReloading(bool reloading)
     }
 }
 
-void Container::reload(Services::Configuration::Service& configuration, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime, Services::Environment::Service& environment)
+void Container::applySystemConfiguration(const QString& deviceId, const QJsonObject& systemConfig)
+{
+    m_setup->applyDeviceConfiguration(deviceId, systemConfig);
+}
+
+void Container::applyApplicationList(const QJsonArray& applications,
+                                     Common::Communication::WebSocket::Client::Service& webSocket,
+                                     Services::Media::Service& media,
+                                     Services::Audio::Service& audio,
+                                     Services::DateTime::Service& dateTime,
+                                     Services::Environment::Service& environment)
 {
     setReloading(true);
 
-    Services::Configuration::DeviceConfiguration* config = configuration.getCurrentConfiguration();
-    if (!config || !config->isValid() || !config->hasApplications()) {
-        qCWarning(ApplicationContainer) << "Invalid configuration retrieved.";
-        setReloading(false);
-        return;
-    }
-
-    if (config->systemConfiguration.isEmpty()) {
-        qCWarning(ApplicationContainer) << "System configuration is empty.";
-        setReloading(false);
-        return;
-    }
-
-    qCInfo(ApplicationContainer) << "Applying system configuration from device configuration";
-    m_setup->applyDeviceConfiguration(*config);
-
-    // Destroy existing dynamic applications
-    qCInfo(ApplicationContainer) << "Destroying existing applications before reloading from configuration";
-    for (auto it = m_applications.begin(); it != m_applications.end(); ++it) {
-        if (it.value()) {
-            qCDebug(ApplicationContainer) << "Destroying application:" << it.key();
-            delete it.value();
+    QSet<QString> incomingIds;
+    for (const QJsonValue& value : applications) {
+        if (!value.isObject()) {
+            continue;
         }
-    }
-    m_applications.clear();
 
-    qCInfo(ApplicationContainer) << "Creating" << config->applicationCount() << "applications from configuration";
-    for (const QJsonObject& appConfig : config->applications) {
-        QString id = appConfig["id"].toString();
-        Common::Type type = Common::typeFromString(appConfig["type"].toString());
-        QString displayName = appConfig["name"].toString();
-        int order = appConfig["order"].toInt();
-        Common::Watchface watchface = Common::watchfaceFromString(appConfig["watchface"].toString());
+        const QJsonObject appConfig = value.toObject();
+        const QString id = appConfig.value("id").toString();
+        const Common::Type type = Common::typeFromString(appConfig.value("type").toString());
+        const QString displayName = appConfig.value("name").toString();
+        const int order = appConfig.value("order").toInt();
+        const Common::Watchface watchface = Common::watchfaceFromString(appConfig.value("watchface").toString());
 
         if (id.isEmpty() ||
             type == Common::Type::Unknown ||
             displayName.isEmpty() ||
             watchface == Common::Watchface::None) {
-            qCWarning(ApplicationContainer) << "Skipping creation of application with invalid metadata:" << appConfig;
+            qCWarning(ApplicationContainer) << "Skipping application with invalid metadata:" << appConfig;
             continue;
         }
 
-        // Create application
-        Common::Application* app = createApplication(id, type, displayName, order, watchface, media, audio, dateTime, environment);
-        if (app) {
-            app->applyConfiguration(appConfig);
+        incomingIds.insert(id);
+
+        if (!m_applications.contains(id)) {
+            Common::Application* app = createApplication(id, type, displayName, order, watchface, webSocket, media, audio, dateTime, environment);
+            if (!app) {
+                qCWarning(ApplicationContainer) << "Failed to create application:" << id << "of type:" << type;
+                continue;
+            }
+
             m_applications[id] = app;
         }
-        else {
-            qCWarning(ApplicationContainer) << "Failed to create application:" << id << "of type:" << type;
+    }
+
+    const QList<QString> existingIds = m_applications.keys();
+    for (const QString& id : existingIds) {
+        if (incomingIds.contains(id)) {
+            continue;
+        }
+
+        Common::Application* app = m_applications.take(id);
+        if (app) {
+            qCDebug(ApplicationContainer) << "Removing application:" << id;
+            delete app;
         }
     }
 
     m_watchface->refresh();
-
     setReloading(false);
 }
 
-Common::Application* Container::createApplication(const QString& id, const Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime, Services::Environment::Service& environment)
+Common::Application* Container::createApplication(const QString& id, const Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Common::Communication::WebSocket::Client::Service& webSocket, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime, Services::Environment::Service& environment)
 {
     if (type == Common::Type::Clock) {
-        return new Clock::Application(id, type, displayName, order, watchface, media, audio, this);
+        return new Clock::Application(id, type, displayName, order, watchface, media, audio, webSocket, this);
     }
     else if (type == Common::Type::TimeElapsed) {
-        return new TimeElapsed::Application(id, type, displayName, order, watchface, media, audio, this);
+        return new TimeElapsed::Application(id, type, displayName, order, watchface, media, audio, webSocket, this);
     }
     else if (type == Common::Type::Countdown) {
-        return new Countdown::Application(id, type, displayName, order, watchface, media, audio, this);
+        return new Countdown::Application(id, type, displayName, order, watchface, media, audio, webSocket, this);
     }
     else if (type == Common::Type::NoOperation) {
-        return new NoOperation::Application(id, type, displayName, order, watchface, media, this);
+        return new NoOperation::Application(id, type, displayName, order, watchface, media, webSocket, this);
     }
     else if (type == Common::Type::CurrentDate) {
-        return new CurrentDate::Application(id, type, displayName, order, watchface, media, dateTime, this);
+        return new CurrentDate::Application(id, type, displayName, order, watchface, media, dateTime, webSocket, this);
     }
     else if (type == Common::Type::Environment) {
-        return new Environment::Application(id, type, displayName, order, watchface, environment, this);
+        return new Environment::Application(id, type, displayName, order, watchface, environment, webSocket, this);
     }
     else {
         qCWarning(ApplicationContainer) << "Unknown application type:" << type;

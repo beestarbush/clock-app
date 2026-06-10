@@ -28,12 +28,12 @@ Service::Service(Common::Communication::WebSocket::Client::Service& webSocket,
       m_isReporting(false)
 {
     // Subscribe to processor temperature data from backend
-    m_webSocket.subscribe(Common::Communication::WebSocket::Topic::ProcessorTemperature);
-    connect(&m_webSocket, &Common::Communication::WebSocket::Client::Service::publishReceived, this, [this](const Common::Communication::WebSocket::Topic& topic, const QJsonObject& data) {
-        if (topic == Common::Communication::WebSocket::Topic::ProcessorTemperature) {
-            onProcessorTemperatureReceived(data);
-        }
-    });
+    m_webSocket.subscribe(Common::Communication::WebSocket::Topic::ProcessorTemperature,
+                          QJsonObject(),
+                          this,
+                          [this](const QJsonObject& data) {
+                              onProcessorTemperatureReceived(data);
+                          });
 
     // Configure monitor timer (processor temperature checks etc.)
     m_monitorTimer.setSingleShot(false);

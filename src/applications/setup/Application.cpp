@@ -565,14 +565,14 @@ QJsonObject Application::buildSystemConfiguration() const
     return systemConfig;
 }
 
-void Application::applyDeviceConfiguration(const Services::Configuration::DeviceConfiguration& config)
+void Application::applyDeviceConfiguration(const QString& deviceId, const QJsonObject& systemConfig)
 {
     // Update device ID from the backend configuration
-    if (!config.deviceId.isEmpty() && m_deviceId != config.deviceId) {
-        m_deviceId = config.deviceId;
+    if (!deviceId.isEmpty() && m_deviceId != deviceId) {
+        m_deviceId = deviceId;
         emit deviceIdChanged();
     }
 
     // Apply system configuration
-    applySystemConfiguration(config.systemConfiguration);
+    applySystemConfiguration(systemConfig);
 }

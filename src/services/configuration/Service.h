@@ -35,6 +35,7 @@ class Service : public QObject
 
   signals:
     void configurationChanged();
+    void systemConfigChanged(const QString& deviceId, const QJsonObject& systemConfig);
     void syncingChanged();
     void lastSyncTimeChanged();
     void configVersionChanged();
@@ -43,15 +44,13 @@ class Service : public QObject
   private:
     void performStartupCheck();
     void completeStartupCheck();
-    void loadLocalConfiguration();
     void updateCurrentConfig(const DeviceConfiguration& config);
 
     void setSyncing(bool syncing);
     void setConfigVersion(const QString& version);
     void setStartupCheckInProgress(bool inProgress);
 
-    // Slot for incoming config data
-    void onConfigurationReceived(const QJsonObject& configJson);
+    void onSystemConfigReceived(const QJsonObject& payload);
 
     Common::Communication::WebSocket::Client::Service& m_webSocket;
     QTimer m_startupTimeoutTimer;

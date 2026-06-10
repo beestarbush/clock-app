@@ -1,15 +1,17 @@
 #include "Application.h"
 #include "services/audio/Service.h"
 #include "services/media/Service.h"
+#include "websocket/client/Service.h"
 #include <QDateTime>
 #include <QDebug>
+#include <QJsonObject>
 #include <QLoggingCategory>
 
 Q_LOGGING_CATEGORY(ClockApplication, "ClockApplication")
 
 using namespace Applications::Clock;
 
-Application::Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, QObject* parent)
+Application::Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, Common::Communication::WebSocket::Client::Service& webSocket, QObject* parent)
     : Common::Application(id, type, displayName, order, watchface, parent),
       m_configuration(new Configuration(id, parent)),
       m_media(media),
@@ -17,6 +19,13 @@ Application::Application(const QString& id, Common::Type type, const QString& di
       m_timer(this),
       m_tickPhase(true)
 {
+    webSocket.subscribe(Common::Communication::WebSocket::Topic::ApplicationDetail,
+                        QJsonObject{{"id", id}},
+                        this,
+                        [this](const QJsonObject& payload) {
+                            applyConfiguration(payload);
+                        });
+
     // Refresh background when media sync completes
     connect(&m_media, &Services::Media::Service::syncCompleted, this, [this]() {
         emit m_configuration->backgroundChanged();

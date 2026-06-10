@@ -10,6 +10,11 @@ namespace Services::Environment
 class Service;
 }
 
+namespace Common::Communication::WebSocket::Client
+{
+class Service;
+}
+
 namespace Applications::Environment
 {
 class Application : public Common::Application
@@ -21,7 +26,7 @@ class Application : public Common::Application
     Q_PROPERTY(double humidityPercentage READ humidityPercentage NOTIFY humidityPercentageChanged)
 
   public:
-    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Environment::Service& environment, QObject* parent = nullptr);
+    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Environment::Service& environment, Common::Communication::WebSocket::Client::Service& webSocket, QObject* parent = nullptr);
 
     Configuration* configuration() const override;
 

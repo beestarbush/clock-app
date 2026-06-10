@@ -28,7 +28,7 @@ class Service : public QObject
     void humidityPercentageChanged();
 
   private:
-    void onEnvironmentDataReceived(const Common::Communication::WebSocket::Topic& topic, const QJsonObject& data);
+    void onEnvironmentDataReceived(const QJsonObject& data);
 
     Common::Communication::WebSocket::Client::Service& m_webSocket;
     double m_co2PartsPerMillion;

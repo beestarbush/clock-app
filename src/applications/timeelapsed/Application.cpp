@@ -1,8 +1,11 @@
 #include "Application.h"
 #include "services/audio/Service.h"
 #include "services/media/Service.h"
+#include "websocket/Types.h"
+#include "websocket/client/Service.h"
 #include <QDateTime>
 #include <QDebug>
+#include <QJsonObject>
 #include <QLoggingCategory>
 
 Q_LOGGING_CATEGORY(TimeElapsedApplication, "TimeElapsedApplication")
@@ -15,7 +18,7 @@ constexpr quint64 SECONDS_IN_A_DAY = SECONDS_IN_HOUR * 24;
 constexpr quint64 DAYS_IN_A_WEEK = 7;
 constexpr quint64 DAYS_IN_YEAR = 365;
 
-Application::Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, QObject* parent)
+Application::Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, Common::Communication::WebSocket::Client::Service& webSocket, QObject* parent)
     : Common::Application(id, type, displayName, order, watchface, parent),
       m_configuration(new Common::TimerConfiguration(id, parent)),
       m_media(media),
@@ -30,6 +33,13 @@ Application::Application(const QString& id, Common::Type type, const QString& di
       m_seconds(0),
       m_timer(this)
 {
+    webSocket.subscribe(Common::Communication::WebSocket::Topic::ApplicationDetail,
+                        QJsonObject{{"id", id}},
+                        this,
+                        [this](const QJsonObject& payload) {
+                            applyConfiguration(payload);
+                        });
+
     initMilestones();
 
     startTimer();

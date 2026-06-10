@@ -17,6 +17,11 @@ namespace Services::Audio
 class Service;
 }
 
+namespace Common::Communication::WebSocket::Client
+{
+class Service;
+}
+
 namespace Applications::TimeElapsed
 {
 class Application : public Common::Application
@@ -32,7 +37,7 @@ class Application : public Common::Application
     Q_PROPERTY(quint64 seconds READ seconds NOTIFY timeChanged)
 
   public:
-    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, QObject* parent = nullptr);
+    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, Common::Communication::WebSocket::Client::Service& webSocket, QObject* parent = nullptr);
 
     Common::TimerConfiguration* configuration() const override;
 

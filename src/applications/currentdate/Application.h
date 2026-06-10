@@ -16,6 +16,11 @@ namespace Services::DateTime
 class Service;
 }
 
+namespace Common::Communication::WebSocket::Client
+{
+class Service;
+}
+
 namespace Applications::CurrentDate
 {
 class Application : public Common::Application
@@ -29,7 +34,7 @@ class Application : public Common::Application
     Q_PROPERTY(int dayOfWeek READ dayOfWeek NOTIFY dayOfWeekChanged)
 
   public:
-    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::DateTime::Service& dateTime, QObject* parent = nullptr);
+    Application(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::DateTime::Service& dateTime, Common::Communication::WebSocket::Client::Service& webSocket, QObject* parent = nullptr);
 
     Common::Configuration* configuration() const override;
     void applyConfiguration(const QJsonObject& configuration) override;

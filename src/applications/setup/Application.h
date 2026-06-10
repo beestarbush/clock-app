@@ -10,7 +10,6 @@
 namespace Services::Configuration
 {
 class Service;
-class DeviceConfiguration;
 } // namespace Services::Configuration
 
 namespace Common
@@ -140,7 +139,7 @@ class Application : public QObject
     void applySystemConfiguration(const QJsonObject& systemConfig);
     QJsonObject buildSystemConfiguration() const;
 
-    void applyDeviceConfiguration(const Services::Configuration::DeviceConfiguration& config);
+    void applyDeviceConfiguration(const QString& deviceId, const QJsonObject& systemConfig);
 
     Q_INVOKABLE void finish();
     Q_INVOKABLE void next();

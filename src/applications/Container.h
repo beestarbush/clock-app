@@ -1,3 +1,5 @@
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QMap>
 #include <QObject>
 
@@ -21,10 +23,6 @@ namespace Audio
 {
 class Service;
 }
-namespace Configuration
-{
-class Service;
-}
 namespace Environment
 {
 class Service;
@@ -38,6 +36,11 @@ namespace DateTime
 class Service;
 }
 } // namespace Services
+
+namespace Common::Communication::WebSocket::Client
+{
+class Service;
+}
 
 namespace Applications
 {
@@ -65,10 +68,16 @@ class Container : public QObject
 
   private:
     void setReloading(bool reloading);
+    void applyApplicationList(const QJsonArray& applications,
+                              Common::Communication::WebSocket::Client::Service& webSocket,
+                              Services::Media::Service& media,
+                              Services::Audio::Service& audio,
+                              Services::DateTime::Service& dateTime,
+                              Services::Environment::Service& environment);
+    void applySystemConfiguration(const QString& deviceId, const QJsonObject& systemConfig);
 
     // Factory method
-    Common::Application* createApplication(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime, Services::Environment::Service& environment);
-    void reload(Services::Configuration::Service& configuration, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime, Services::Environment::Service& environment);
+    Common::Application* createApplication(const QString& id, Common::Type type, const QString& displayName, int order, Common::Watchface watchface, Common::Communication::WebSocket::Client::Service& webSocket, Services::Media::Service& media, Services::Audio::Service& audio, Services::DateTime::Service& dateTime, Services::Environment::Service& environment);
 
   private:
     bool m_reloading = true;
